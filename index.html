@@ -6,47 +6,54 @@
       .hidden {
         display: none;
       }
+      .static_height {
+        height: 60px;
+      }
     </style>
   </head>
   <body>
     <label for="graph-type">Choose two indecomposable components:</label>
 
-    <div>
-      <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
+    <div class="static_height">
+      <div>
+        <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
+          <option value="C5">C₅ (cycle graph with 5 vertices)</option>
+          <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
+          <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
+          <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+        </select>
+      </div>
+      
+      <div id="input-r-1" class="hidden">
+        <label for="r">Enter r:</label>
+        <input type="number" id="r" name="r" min="2">
+      </div>
+  
+      <div id="input-s-1" class="hidden">
+        <label for="s">Enter s:</label>
+        <input type="number" id="s" name="s" min="1">
+      </div>
+    </div>
+
+    
+    <div class="static_height">
+      <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
         <option value="C5">C₅ (cycle graph with 5 vertices)</option>
         <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
         <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
         <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
       </select>
-    </div>
-    
-    <div id="input-r-1" class="hidden">
-      <label for="r">Enter r:</label>
-      <input type="number" id="r" name="r" min="2">
-    </div>
-
-    <div id="input-s-1" class="hidden">
-      <label for="s">Enter s:</label>
-      <input type="number" id="s" name="s" min="1">
-    </div>
-
-    
-    <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
-      <option value="C5">C₅ (cycle graph with 5 vertices)</option>
-      <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
-      <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
-      <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
-    </select>
-
-    
-    <div id="input-r-2" class="hidden">
-      <label for="r">Enter r:</label>
-      <input type="number" id="r" name="r" min="2">
-    </div>
-
-    <div id="input-s-2" class="hidden">
-      <label for="s">Enter s:</label>
-      <input type="number" id="s" name="s" min="1">
+  
+      
+      <div id="input-r-2" class="hidden">
+        <label for="r">Enter r:</label>
+        <input type="number" id="r" name="r" min="2">
+      </div>
+  
+      <div id="input-s-2" class="hidden">
+        <label for="s">Enter s:</label>
+        <input type="number" id="s" name="s" min="1">
+      </div>
     </div>
 
     <script>
