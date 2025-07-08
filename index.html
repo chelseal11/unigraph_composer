@@ -56,6 +56,8 @@
       </div>
     </div>
 
+    <button onclick="computeComposition()">Compute Composition</button>
+
     <script>
       function showInputsOne() {
         const selection = document.getElementById('graph-type-1').value;
@@ -91,6 +93,20 @@
         } else if (selection === 'Us') {
           inputS.classList.remove('hidden');
         }
+      }
+
+      function computeComposition() {
+        const g1 = document.getElementById('graph-type-1').value;
+        const g2 = document.getElementById('graph-type-2').value;
+        const r1 = document.getElementById('r-1')?.value;
+        const s1 = document.getElementById('s-1')?.value;
+        const r2 = document.getElementById('r-2')?.value;
+        const s2 = document.getElementById('s-2')?.value;
+
+        console.log("Component 1:", g1, "r:", r1, "s:", s1);
+        console.log("Component 2:", g2, "r:", r2, "s:", s2);
+
+        alert(`Composing: ${g1} and ${g2}`);
       }
     </script>
   </body>
