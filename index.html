@@ -9,8 +9,9 @@
     </style>
   </head>
   <body>
-    <label for="graph-type">Choose an indecomposable component:</label>
-    <select id="graph-type" name="graph-type" onchange="showInputs()">
+    <label for="graph-type">Choose two indecomposable components:</label>
+
+    <select id="graph-type-1" name="graph-type-1" onchange="showInputs()">
       <option value="C5">C₅ (cycle graph with 5 vertices)</option>
       <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
       <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
@@ -18,21 +19,58 @@
     </select>
 
     
-    <div id="input-r" class="hidden">
+    <div id="input-r-1" class="hidden">
       <label for="r">Enter r:</label>
       <input type="number" id="r" name="r" min="2">
     </div>
 
-    <div id="input-s" class="hidden">
+    <div id="input-s-1" class="hidden">
+      <label for="s">Enter s:</label>
+      <input type="number" id="s" name="s" min="1">
+    </div>
+
+    
+    <select id="graph-type-2" name="graph-type-2" onchange="showInputs()">
+      <option value="C5">C₅ (cycle graph with 5 vertices)</option>
+      <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
+      <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
+      <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+    </select>
+
+    
+    <div id="input-r-2" class="hidden">
+      <label for="r">Enter r:</label>
+      <input type="number" id="r" name="r" min="2">
+    </div>
+
+    <div id="input-s-2" class="hidden">
       <label for="s">Enter s:</label>
       <input type="number" id="s" name="s" min="1">
     </div>
 
     <script>
-      function showInputs() {
-        const selection = document.getElementById('graph-type').value;
-        const inputR = document.getElementById('input-r');
-        const inputS = document.getElementById('input-s');
+      function showInputsOne() {
+        const selection = document.getElementById('graph-type-1').value;
+        const inputR = document.getElementById('input-r-1');
+        const inputS = document.getElementById('input-s-1');
+
+        inputR.classList.add('hidden');
+        inputS.classList.add('hidden');
+
+        if (selection === 'rK2') {
+          inputR.classList.remove('hidden');
+        } else if (selection === 'K1r+sK2') {
+          inputR.classList.remove('hidden');
+          inputS.classList.remove('hidden');
+        } else if (selection === 'Us') {
+          inputS.classList.remove('hidden');
+        }
+      }
+
+      function showInputsOne() {
+        const selection = document.getElementById('graph-type-2').value;
+        const inputR = document.getElementById('input-r-2');
+        const inputS = document.getElementById('input-s-2');
 
         inputR.classList.add('hidden');
         inputS.classList.add('hidden');
