@@ -4,9 +4,6 @@
     <title>Unigraph Composing</title>
   </head>
   <body>
-    <h1>Hello, world!</h1>
-    <p>This is my CS project.</p>
-
     <label for="graph-type">Choose an indecomposable component:</label>
     <select id="graph-type" name="graph-type">
       <option value="C5">C₅ (cycle graph with 5 vertices)</option>
@@ -14,5 +11,36 @@
       <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
       <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
     </select>
+
+    
+    <div id="input-r" class="hidden">
+      <label for="r">Enter r:</label>
+      <input type="number" id="r" name="r" min="2">
+    </div>
+
+    <div id="input-s" class="hidden">
+      <label for="s">Enter s:</label>
+      <input type="number" id="s" name="s" min="1">
+    </div>
+
+    <script>
+      function showInputs() {
+        const selection = document.getElementById('graph-type').value;
+        const inputR = document.getElementById('input-r');
+        const inputS = document.getElementById('input-s');
+
+        inputR.classList.add('hidden');
+        inputS.classList.add('hidden');
+
+        if (selection === 'rK2') {
+          inputR.classList.remove('hidden');
+        } else if (selection === 'K1r+sK2') {
+          inputR.classList.remove('hidden');
+          inputS.classList.remove('hidden');
+        } else if (selection === 'Us') {
+          inputS.classList.remove('hidden');
+        }
+      }
+    </script>
   </body>
 </html>
