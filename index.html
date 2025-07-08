@@ -6,5 +6,13 @@
   <body>
     <h1>Hello, world!</h1>
     <p>This is my CS project.</p>
+
+    <label for="graph-type">Choose an indecomposable component:</label>
+    <select id="graph-type" name="graph-type">
+      <option value="C5">C₅ (cycle graph with 5 vertices)</option>
+      <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
+      <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
+      <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+    </select>
   </body>
 </html>
