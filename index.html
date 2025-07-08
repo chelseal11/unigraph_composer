@@ -11,13 +11,14 @@
   <body>
     <label for="graph-type">Choose two indecomposable components:</label>
 
-    <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
-      <option value="C5">C₅ (cycle graph with 5 vertices)</option>
-      <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
-      <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
-      <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
-    </select>
-
+    <div>
+      <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
+        <option value="C5">C₅ (cycle graph with 5 vertices)</option>
+        <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
+        <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
+        <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+      </select>
+    </div>
     
     <div id="input-r-1" class="hidden">
       <label for="r">Enter r:</label>
