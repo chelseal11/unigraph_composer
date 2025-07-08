@@ -10,7 +10,7 @@
   </head>
   <body>
     <label for="graph-type">Choose an indecomposable component:</label>
-    <select id="graph-type" name="graph-type">
+    <select id="graph-type" name="graph-type" onchange="showInputs()">
       <option value="C5">C₅ (cycle graph with 5 vertices)</option>
       <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
       <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
