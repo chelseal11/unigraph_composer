@@ -103,10 +103,89 @@
         const r2 = document.getElementById('r-2')?.value;
         const s2 = document.getElementById('s-2')?.value;
 
-        console.log("Component 1:", g1, "r:", r1, "s:", s1);
-        console.log("Component 2:", g2, "r:", r2, "s:", s2);
-
         alert(`Composing: ${g1} and ${g2}`);
+
+        const g = getGraph(g1, r1, s1);
+        const h = getGraph(g1, r2, s2);
+
+        console.log(g);
+        console.log(h);      
+      }
+
+      function getGraph(type, r, s) {
+        r = Number(r);   // NaN if undefined → fine for switch cases that ignore it
+        s = Number(s);
+    
+        const graph = {};
+    
+        switch (type) {
+    
+          /*  C₅ : 5-cycle ------------------------------------------------------*/
+          case "C5": {
+            const n = 5;
+            for (let i = 1; i <= n; i++) {
+              const next = i % n + 1;          // wrap-around
+              graph[i] = [ (i - 2 + n) % n + 1, next ];  // previous and next
+            }
+            break;
+          }
+    
+          /*  rK₂ : r disjoint edges -------------------------------------------*/
+          case "rK2": {
+            if (r < 2) { alert("r must be ≥ 2"); break; }
+            let v = 1;
+            for (let i = 0; i < r; i++) {
+              graph[v]     = [v + 1];
+              graph[v + 1] = [v];
+              v += 2;
+            }
+            break;
+          }
+    
+          /*  K₁,ᵣ + sK₂ : star on r leaves plus s extra disjoint edges ---------*/
+          case "K1r+sK2": {
+            if (r < 2 || s < 1) { alert("Need r ≥ 2 and s ≥ 1"); break; }
+            let v = 1;
+            graph[v] = [];                    // centre of the star
+            /* star leaves */
+            for (let i = 0; i < r; i++) {
+              const leaf = ++v;
+              graph[1].push(leaf);
+              graph[leaf] = [1];
+            }
+            /* extra K₂ components */
+            for (let i = 0; i < s; i++) {
+              const a = ++v, b = ++v;
+              graph[a] = [b];
+              graph[b] = [a];
+            }
+            break;
+          }
+    
+          /*  Uₛ : Tyshkevich’s “U” component (path Pₛ₊₁ with all Pₛ’s
+              internal vertices joined to a universal vertex)  ------------*/
+          case "Us": {
+            if (s < 1) { alert("s must be ≥ 1"); break; }
+            const hub = 1;
+            graph[hub] = [];
+            /* build P_{s+1}: vertices 2 … s+2 */
+            for (let i = 2; i <= s + 2; i++) {
+              graph[i] = [];
+              if (i > 2) graph[i].push(i - 1);
+              if (i < s + 2) graph[i].push(i + 1);
+              if (i !== 2 && i !== s + 2) {   // internal vertices of the path
+                graph[hub].push(i);
+                graph[i].push(hub);
+              }
+            }
+            break;
+          }
+    
+          default:
+            alert("Unknown graph type: " + type);
+        }
+    
+        return graph;
       }
     </script>
   </body>
