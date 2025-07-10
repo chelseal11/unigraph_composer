@@ -17,10 +17,10 @@
     <div class="static_height">
       <div>
         <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
-          <option value="C5">C₅ (cycle graph with 5 vertices)</option>
-          <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
-          <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
-          <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+          <option value="C5">C₅</option>
+          <option value="rK2">rK₂ for r ≥ 2</option>
+          <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1</option>
+          <option value="Us">Uₛ for s ≥ 1</option>
         </select>
       </div>
       
@@ -38,10 +38,10 @@
     
     <div class="static_height">
       <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
-        <option value="C5">C₅ (cycle graph with 5 vertices)</option>
-        <option value="rK2">rK₂ for r ≥ 2 (r disjoint edges)</option>
-        <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1 (star graph with r leaves and s disjoint edges)</option>
-        <option value="Us">Uₛ for s ≥ 1 (special structure in decomposition)</option>
+        <option value="C5">C₅</option>
+        <option value="rK2">rK₂ for r ≥ 2</option>
+        <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1</option>
+        <option value="Us">Uₛ for s ≥ 1</option>
       </select>
   
       
@@ -113,7 +113,7 @@
       }
 
       function getGraph(type, r, s) {
-        r = Number(r);   // NaN if undefined → fine for switch cases that ignore it
+        r = Number(r);
         s = Number(s);
     
         const graph = {};
@@ -123,18 +123,16 @@
         console.log("s", s)
         
         switch (type) {
-    
-          /*  C₅ : 5-cycle ------------------------------------------------------*/
+
           case "C5": {
             const n = 5;
             for (let i = 1; i <= n; i++) {
-              const next = i % n + 1;          // wrap-around
-              graph[i] = [ (i - 2 + n) % n + 1, next ];  // previous and next
+              const next = i % n + 1;  
+              graph[i] = [ (i - 2 + n) % n + 1, next ];
             }
             break;
           }
     
-          /*  rK₂ : r disjoint edges -------------------------------------------*/
           case "rK2": {
             if (r < 2) { alert("r must be ≥ 2"); break; }
             let v = 1;
@@ -146,18 +144,17 @@
             break;
           }
     
-          /*  K₁,ᵣ + sK₂ : star on r leaves plus s extra disjoint edges ---------*/
           case "K1r+sK2": {
             if (r < 2 || s < 1) { alert("Need r ≥ 2 and s ≥ 1"); break; }
             let v = 1;
-            graph[v] = [];                    // centre of the star
-            /* star leaves */
+            graph[v] = [];
+            
             for (let i = 0; i < r; i++) {
               const leaf = ++v;
               graph[1].push(leaf);
               graph[leaf] = [1];
             }
-            /* extra K₂ components */
+            
             for (let i = 0; i < s; i++) {
               const a = ++v, b = ++v;
               graph[a] = [b];
@@ -166,18 +163,16 @@
             break;
           }
     
-          /*  Uₛ : Tyshkevich’s “U” component (path Pₛ₊₁ with all Pₛ’s
-              internal vertices joined to a universal vertex)  ------------*/
           case "Us": {
             if (s < 1) { alert("s must be ≥ 1"); break; }
             const hub = 1;
             graph[hub] = [];
-            /* build P_{s+1}: vertices 2 … s+2 */
+            
             for (let i = 2; i <= s + 2; i++) {
               graph[i] = [];
               if (i > 2) graph[i].push(i - 1);
               if (i < s + 2) graph[i].push(i + 1);
-              if (i !== 2 && i !== s + 2) {   // internal vertices of the path
+              if (i !== 2 && i !== s + 2) {
                 graph[hub].push(i);
                 graph[i].push(hub);
               }
