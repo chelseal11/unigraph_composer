@@ -97,82 +97,38 @@
       function computeComposition() {
         const g1 = document.getElementById('graph-type-1').value;
         const g2 = document.getElementById('graph-type-2').value;
-        const r1 = document.getElementById('r-1')?.value;
-        const s1 = document.getElementById('s-1')?.value;
-        const r2 = document.getElementById('r-2')?.value;
-        const s2 = document.getElementById('s-2')?.value;
+        const m1 = document.getElementById('m-1')?.value;
+        const l1 = document.getElementById('l-1')?.value;
+        const m2 = document.getElementById('m-2')?.value;
+        const l2 = document.getElementById('l-2')?.value;
 
-        alert(`Composing: ${g1} and ${g2}`);
+        alemt(`Composing: ${g} and ${h}`);
 
-        const g = getGraph(g1, r1, s1);
-        const h = getGraph(g2, r2, s2);
+        const g = getDegreeSequence(g1, m1, l1);
+        const h = getDegreeSequence(g2, m2, l2);
 
         console.log(g);
         console.log(h);      
       }
 
-      function getGraph(type, r, s) {
-        r = Number(r);
-        s = Number(s);
+      function getDegreeSequence(type, m, l) {
+        m = Number(m);
+        l = Number(l);
     
-        const graph = {};
+        const degreeSequence = {};
         
         switch (type) {
 
           case "C5": {
-            const n = 5;
-            for (let i = 1; i <= n; i++) {
-              const next = i % n + 1;  
-              graph[i] = [ (i - 2 + n) % n + 1, next ];
-            }
-            break;
           }
     
-          case "rK2": {
-            if (r < 2) { alert("r must be ≥ 2"); break; }
-            let v = 1;
-            for (let i = 0; i < r; i++) {
-              graph[v]     = [v + 1];
-              graph[v + 1] = [v];
-              v += 2;
-            }
-            break;
+          case "mK2": {
           }
     
-          case "K1r+sK2": {
-            if (r < 2 || s < 1) { alert("Need r ≥ 2 and s ≥ 1"); break; }
-            let v = 1;
-            graph[v] = [];
-            
-            for (let i = 0; i < r; i++) {
-              const leaf = ++v;
-              graph[1].push(leaf);
-              graph[leaf] = [1];
-            }
-            
-            for (let i = 0; i < s; i++) {
-              const a = ++v, b = ++v;
-              graph[a] = [b];
-              graph[b] = [a];
-            }
-            break;
+          case "U2ml": {
           }
     
-          case "Us": {
-            if (s < 1) { alert("s must be ≥ 1"); break; }
-            const hub = 1;
-            graph[hub] = [];
-            
-            for (let i = 2; i <= s + 2; i++) {
-              graph[i] = [];
-              if (i > 2) graph[i].push(i - 1);
-              if (i < s + 2) graph[i].push(i + 1);
-              if (i !== 2 && i !== s + 2) {
-                graph[hub].push(i);
-                graph[i].push(hub);
-              }
-            }
-            break;
+          case "U3m": {
           }
     
           default:
