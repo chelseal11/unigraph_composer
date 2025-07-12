@@ -25,6 +25,7 @@
           <option value="Spq">S(p, q), p ≥ 1, q ≥ 2 </option>
           <option value="S2">S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm</option>
           <option value="S3">S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1</option>
+          <option value="S4">S4(p, q) p ≥ 1, q ≥ 1</option>
         </select>
       </div>
 
@@ -33,9 +34,9 @@
         <input type="number" id="p-1" name="p" min="1">
       </div>
   
-      <div id="input-q-1" class="hidden">
-        <label for="q">Enter 1:</label>
-        <input type="number" id="q-1" name="q" min="1">
+      <div id="input-l-1" class="hidden">
+        <label for="l">Enter 1:</label>
+        <input type="number" id="l-1" name="l" min="1">
       </div>
   
       <div id="input-q1-1" class="hidden">
@@ -62,35 +63,20 @@
     
     <div class="static_height">
       <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
-        <option value="SVG">Single-vertex graph</option>
-        <option value="Spq">S(p, q), p ≥ 1, q ≥ 2 </option>
-        <option value="S2">S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm</option>
-        <option value="S3">S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1</option>
+        <option value="C5">C₅</option>
+        <option value="mK2">mK₂ for m ≥ 2</option>
+        <option value="U2ml">U2(m, ℓ), m ≥ 1, ℓ ≥ 2</option>
+        <option value="U3m">U3(m), m ≥ 1</option>
       </select>
-
-      <div id="input-p-2" class="hidden">
-        <label for="p">Enter p:</label>
-        <input type="number" id="p-2" name="p" min="1">
-      </div>
-
-      <div id="input-q-2" class="hidden">
-        <label for="q">Enter q:</label>
-        <input type="number" id="q-2" name="q" min="1">
-      </div>
-  
-      <div id="input-q1-2" class="hidden">
-        <label for="q1">Enter q1:</label>
-        <input type="number" id="q1-2" name="q1" min="1">
-      </div>
-
-      <div id="input-q2-2" class="hidden">
-        <label for="q2">Enter q2:</label>
-        <input type="number" id="q2-2" name="q2" min="1">
-      </div>
 
       <div id="input-m-2" class="hidden">
         <label for="m">Enter m:</label>
         <input type="number" id="m-2" name="m" min="1">
+      </div>
+
+      <div id="input-l-2" class="hidden">
+        <label for="l">Enter l:</label>
+        <input type="number" id="l-2" name="l" min="1">
       </div>
     </div>
 
@@ -105,21 +91,15 @@
       const Q1_1 = document.getElementById('input-q1-1');
       const Q2_1 = document.getElementById('input-q2-1');
       const M_2 = document.getElementById('input-m-2');
-      const P_2 = document.getElementById('input-p-2');
-      const Q_2 = document.getElementById('input-q-2');
-      const Q1_2 = document.getElementById('input-q1-2');
-      const Q2_2 = document.getElementById('input-q2-2');
+      const L_2 = document.getElementById('input-l-2');
       M_1.classList.add('hidden');
       L_1.classList.add('hidden');
       P_1.classList.add('hidden');
       Q_1.classList.add('hidden');
       Q1_1.classList.add('hidden');
-      Q2_2.classList.add('hidden');
+      Q2_1.classList.add('hidden');
       M_2.classList.add('hidden');
-      P_2.classList.add('hidden');
-      Q_2.classList.add('hidden');
-      Q1_2.classList.add('hidden');
-      Q2_2.classList.add('hidden');
+      L_2.classList.add('hidden');
 
       function showInputsOne() {
         const selection1 = document.getElementById('graph-type-1').value;
@@ -143,24 +123,22 @@
           P_1.classList.remove('hidden');
           Q1_1.classList.remove('hidden');
           Q2_1.classList.remove('hidden');
+        } else if (selection1 === 'S4') {
+          P_1.classList.remove('hidden');
+          Q_1.classList.remove('hidden');
         }
       }
 
       function showInputsTwo() {
         const selection2 = document.getElementById('graph-type-2').value;
 
-        if (selection2 === 'Spq') {
-          P_2.classList.remove('hidden');
-          Q_2.classList.remove('hidden');
-        } else if (selection2 === 'S2') {
+        if (selection2 === 'mK2') {
           M_2.classList.remove('hidden');
-          P_2.classList.remove('hidden');
-          Q_2.classList.remove('hidden');
-        } else if (selection2 === 'S3') {
+        } else if (selection2 === 'U2ml') {
           M_2.classList.remove('hidden');
-          P_2.classList.remove('hidden');
-          Q1_2.classList.remove('hidden');
-          Q2_2.classList.remove('hidden');
+          L_2.classList.remove('hidden');
+        } else if (selection2 === 'U3m') {
+          M_2.classList.remove('hidden');
         }
       }
 
@@ -180,18 +158,15 @@
       function getDegreeSequence(type, graph_num) {
         let M, L, P, Q, Q1, Q2;
         if (graph_num == 1) {
-          M = M_1;
-          L = L_1;
-          P = P_1;
-          Q = Q_1;
-          Q1 = Q1_1;
-          Q2 = Q2_1;
+          M = Number(M_1.value);
+          L = Number(L_1.value);
+          P = Number(P_1.value);
+          Q = Number(Q_1.value);
+          Q1 = Number(Q1_1.value);
+          Q2 = Number(Q2_1.value);
         } else {
-          M = M_2;
-          P = P_2;
-          Q = Q_2;
-          Q1 = Q1_2;
-          Q2 = Q2_2;
+          M = Number(M_2.value);
+          L = Number(L_2.value);
         }
         
         switch (type) {
@@ -217,7 +192,38 @@
               2: (2 * M) + 3
             }
           }
-    
+
+          case "SVG": {
+            return {0: 1}
+          }
+
+          case "Spq": {
+            return {
+              [P + Q − 1]: Q,
+              1: P * Q
+            }
+          }
+
+          case "S2": {
+            return {0: 1}
+          }
+
+          case "S3": {
+            return {
+              [P + Q1 + Q2]: Q1 + Q2,
+              [Q1]: 1,
+              1: (P * Q1) + ((P + 1) * Q)
+            }
+          }
+
+          case "S4": {
+            return {
+              [2 * (P + Q + 1) + Q]: 1,
+              [P + Q + 3]: Q + 2,
+              2: (2 * Q * P) + (2 * P) + Q + 1
+            }
+          }
+
           default:
             alert("Unknown graph type: " + type);
         }
