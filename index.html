@@ -112,30 +112,36 @@
       }
 
       function getDegreeSequence(type, m, l) {
-        m = Number(m);
-        l = Number(l);
+        m_int = Number(m);
+        l_int = Number(l);
     
-        const degreeSequence = {};
-        
         switch (type) {
 
           case "C5": {
+            return {2: 5}
           }
     
           case "mK2": {
+            return {1: 2 * m_int}
           }
     
           case "U2ml": {
+            return {
+              l: 1,
+              1: (2 * m) + l_int
+            }
           }
     
           case "U3m": {
+            return {
+              (2 * m_int + 2): 1,
+              2: (2 * m_int) + 3
+            }
           }
     
           default:
             alert("Unknown graph type: " + type);
         }
-    
-        return graph;
       }
     </script>
   </body>
