@@ -163,15 +163,15 @@
       function getDegreeSequence(type, graph_num) {
         let M, L, P, Q, Q1, Q2;
         if (graph_num == 1) {
-          M = Number(M_1.value);
-          L = Number(L_1.value);
-          P = Number(P_1.value);
-          Q = Number(Q_1.value);
-          Q1 = Number(Q1_1.value);
-          Q2 = Number(Q2_1.value);
+          M = Number(document.getElementById('m-1');.value);
+          L = Number(document.getElementById('l-1');.value);
+          P = Number(document.getElementById('p-1');.value);
+          Q = Number(document.getElementById('q1');.value);
+          Q1 = Number(document.getElementById('q1-1');.value);
+          Q2 = Number(document.getElementById('q2-1');.value);
         } else {
-          M = Number(M_2.value);
-          L = Number(L_2.value);
+          M = Number(document.getElementById('m-2');.value);
+          L = Number(document.getElementById('l-2');.value);
         }
 
         console.log("M", M);
