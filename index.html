@@ -18,41 +18,40 @@
       <div>
         <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
           <option value="C5">C₅</option>
-          <option value="rK2">rK₂ for r ≥ 2</option>
-          <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1</option>
-          <option value="Us">Uₛ for s ≥ 1</option>
+          <option value="mK2">mK₂ for m ≥ 2</option>
+          <option value="U2ml">U2(m, ℓ), m ≥ 1, ℓ ≥ 2</option>
+          <option value="U3m">U3(m), m ≥ 1</option>
         </select>
       </div>
       
-      <div id="input-r-1" class="hidden">
-        <label for="r">Enter r:</label>
-        <input type="number" id="r-1" name="r" min="2">
+      <div id="input-m-1" class="hidden">
+        <label for="m">Enter m:</label>
+        <input type="number" id="m-1" name="m" min="2">
       </div>
   
-      <div id="input-s-1" class="hidden">
-        <label for="s">Enter s:</label>
-        <input type="number" id="s-1" name="s" min="1">
+      <div id="input-l-1" class="hidden">
+        <label for="l">Enter l:</label>
+        <input type="number" id="l-1" name="l" min="1">
       </div>
     </div>
 
     
     <div class="static_height">
-      <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
+      <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
         <option value="C5">C₅</option>
-        <option value="rK2">rK₂ for r ≥ 2</option>
-        <option value="K1r+sK2">K₁,ᵣ + sK₂ for r ≥ 2, s ≥ 1</option>
-        <option value="Us">Uₛ for s ≥ 1</option>
+        <option value="mK2">mK₂ for m ≥ 2</option>
+        <option value="U2ml">U2(m, ℓ), m ≥ 1, ℓ ≥ 2</option>
+        <option value="U3m">U3(m), m ≥ 1</option>
       </select>
-  
-      
-      <div id="input-r-2" class="hidden">
-        <label for="r">Enter r:</label>
-        <input type="number" id="r-2" name="r" min="2">
+
+      <div id="input-m-2" class="hidden">
+        <label for="m">Enter m:</label>
+        <input type="number" id="m-2" name="m" min="2">
       </div>
   
-      <div id="input-s-2" class="hidden">
-        <label for="s">Enter s:</label>
-        <input type="number" id="s-2" name="s" min="1">
+      <div id="input-l-2" class="hidden">
+        <label for="l">Enter l:</label>
+        <input type="number" id="l-2" name="l" min="1">
       </div>
     </div>
 
@@ -61,37 +60,37 @@
     <script>
       function showInputsOne() {
         const selection = document.getElementById('graph-type-1').value;
-        const inputR = document.getElementById('input-r-1');
-        const inputS = document.getElementById('input-s-1');
+        const inputM = document.getElementById('input-m-1');
+        const inputL = document.getElementById('input-l-1');
 
-        inputR.classList.add('hidden');
-        inputS.classList.add('hidden');
+        inputM.classList.add('hidden');
+        inputL.classList.add('hidden');
 
-        if (selection === 'rK2') {
-          inputR.classList.remove('hidden');
-        } else if (selection === 'K1r+sK2') {
-          inputR.classList.remove('hidden');
-          inputS.classList.remove('hidden');
-        } else if (selection === 'Us') {
-          inputS.classList.remove('hidden');
+        if (selection === 'mK2') {
+          inputM.classList.remove('hidden');
+        } else if (selection === 'U2ml') {
+          inputM.classList.remove('hidden');
+          inputL.classList.remove('hidden');
+        } else if (selection === 'U3m') {
+          inputM.classList.remove('hidden');
         }
       }
 
       function showInputsTwo() {
         const selection = document.getElementById('graph-type-2').value;
-        const inputR = document.getElementById('input-r-2');
-        const inputS = document.getElementById('input-s-2');
+        const inputM = document.getElementById('input-r-2');
+        const inputL = document.getElementById('input-s-2');
 
-        inputR.classList.add('hidden');
-        inputS.classList.add('hidden');
+        inputM.classList.add('hidden');
+        inputL.classList.add('hidden');
 
-        if (selection === 'rK2') {
-          inputR.classList.remove('hidden');
-        } else if (selection === 'K1r+sK2') {
-          inputR.classList.remove('hidden');
-          inputS.classList.remove('hidden');
-        } else if (selection === 'Us') {
-          inputS.classList.remove('hidden');
+        if (selection === 'mK2') {
+          inputM.classList.remove('hidden');
+        } else if (selection === 'U2ml') {
+          inputM.classList.remove('hidden');
+          inputL.classList.remove('hidden');
+        } else if (selection === 'U3m') {
+          inputM.classList.remove('hidden');
         }
       }
 
