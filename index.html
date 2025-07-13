@@ -198,33 +198,43 @@
           }
 
           case "SVG": {
-            return {0: 1}
+            return {
+              A: {0: 1},
+              B: {null: null}
+            }
           }
 
           case "Spq": {
             return {
-              [P + Q - 1]: Q,
-              1: P * Q
+              A: {[P + Q - 1]: Q},
+              B: {1: P * Q}
             }
           }
 
           case "S2": {
-            return {0: 1}
+            return {
+              A: {0: 1},
+              B: {null: null}
+            }
           }
 
           case "S3": {
             return {
-              [P + Q1 + Q2]: Q1 + Q2,
-              [Q1]: 1,
-              1: (P * Q1) + ((P + 1) * Q)
+              A: {[P + Q1 + Q2]: Q1 + Q2},
+              B: {
+                [Q1]: 1,
+                1: (P * Q1) + ((P + 1) * Q)
+              }
             }
           }
 
           case "S4": {
             return {
-              [2 * (P + Q + 1) + Q]: 1,
-              [P + Q + 3]: Q + 2,
-              2: (2 * Q * P) + (2 * P) + Q + 1
+              A: {
+                [2 * (P + Q + 1) + Q]: 1,
+                [P + Q + 3]: Q + 2
+              },
+              B: {2: (2 * Q * P) + (2 * P) + Q + 1}
             }
           }
 
