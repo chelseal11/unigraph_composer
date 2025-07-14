@@ -33,7 +33,7 @@
         <label for="p">Enter p:</label>
         <input type="number" id="p-1" name="p" min="1">
       </div>
-  
+
       <div id="input-l-1" class="hidden">
         <label for="l">Enter 1:</label>
         <input type="number" id="l-1" name="l" min="1">
@@ -43,7 +43,7 @@
         <label for="q">Enter q:</label>
         <input type="number" id="q-1" name="q" min="1">
       </div>
-  
+
       <div id="input-q1-1" class="hidden">
         <label for="q1">Enter q1:</label>
         <input type="number" id="q1-1" name="q1" min="1">
@@ -53,19 +53,23 @@
         <label for="q2">Enter q2:</label>
         <input type="number" id="q2-1" name="q2" min="1">
       </div>
-  
+
       <div id="input-m-1" class="hidden">
         <label for="m">Enter m:</label>
         <input type="number" id="m-1" name="m" min="2">
       </div>
-  
+
+      <div id="dynamic-p-inputs-1" class="hidden">
+        <!-- Dynamic p1 through pm inputs will be created here -->
+      </div>
+
       <div id="input-l-1" class="hidden">
         <label for="l">Enter l:</label>
         <input type="number" id="l-1" name="l" min="1">
       </div>
     </div>
 
-    
+
     <div class="static_height">
       <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
         <option value="SVG">Single-vertex graph</option>
@@ -75,9 +79,13 @@
         <option value="S4">S4(p, q) p ≥ 1, q ≥ 1</option>
       </select>
 
-      <div id="input-m-2" class="hidden">
+      <div id="input-m-2" class="hidden" onchange="showInputsS2()">
         <label for="m">Enter m:</label>
         <input type="number" id="m-2" name="m" min="1">
+      </div>
+
+      <div id="dynamic-p-inputs-2" class="hidden">
+        <!-- Dynamic p1 through pm inputs will be created here -->
       </div>
 
       <div id="input-p-2" class="hidden">
@@ -116,6 +124,8 @@
       const Q_2 = document.getElementById('input-q-2');
       const Q1_2 = document.getElementById('input-q1-2');
       const Q2_2 = document.getElementById('input-q2-2');
+      const DYNAMIC_P_2 = document.getElementById('dynamic-p-inputs-2');
+      const DYNAMIC_P_1 = document.getElementById('dynamic-p-inputs-1');
       M_1.classList.add('hidden');
       L_1.classList.add('hidden');
       P_1.classList.add('hidden');
@@ -127,10 +137,11 @@
       Q_2.classList.add('hidden');
       Q1_2.classList.add('hidden');
       Q2_2.classList.add('hidden');
-
+      DYNAMIC_P_2.classList.add('hidden');
+      DYNAMIC_P_1.classList.add('hidden');
       function showInputsOne() {
         const selection1 = document.getElementById('graph-type-1').value;
-      
+
         if (selection1 === 'mK2') {
           M_1.classList.remove('hidden');
         } else if (selection1 === 'U2ml') {
@@ -143,8 +154,6 @@
           Q_1.classList.remove('hidden');
         } else if (selection1 === 'S2') {
           M_1.classList.remove('hidden');
-          P_1.classList.remove('hidden');
-          Q_1.classList.remove('hidden');
         } else if (selection1 === 'S3') {
           P_1.classList.remove('hidden');
           Q1_1.classList.remove('hidden');
@@ -163,8 +172,6 @@
           Q_2.classList.remove('hidden');
         } else if (selection2 === 'S2') {
           M_2.classList.remove('hidden');
-          P_2.classList.remove('hidden');
-          Q_2.classList.remove('hidden');
         } else if (selection2 === 'S3') {
           P_2.classList.remove('hidden');
           Q1_2.classList.remove('hidden');
@@ -175,17 +182,40 @@
         }
       }
 
+      function showInputsS2() {
+        const mValue = document.getElementById('m-2').value;
+        const m = parseInt(mValue);
+
+        // Clear existing dynamic inputs
+        DYNAMIC_P_2.innerHTML = '';
+
+        if (m && m >= 1) {
+          // Create p1 through pm inputs
+          for (let i = 1; i <= m; i++) {
+            const inputDiv = document.createElement('div');
+            inputDiv.innerHTML = `
+              <label for="p${i}-2">Enter p${i}:</label>
+              <input type="number" id="p${i}-2" name="p${i}" min="1">
+            `;
+            DYNAMIC_P_2.appendChild(inputDiv);
+          }
+          DYNAMIC_P_2.classList.remove('hidden');
+        } else {
+          DYNAMIC_P_2.classList.add('hidden');
+        }
+      }
+
       function computeComposition() {
         const g1 = document.getElementById('graph-type-1').value;
         const g2 = document.getElementById('graph-type-2').value;
-      
+
         alert(`Composing: ${g1} and ${g2}`);
 
         const g = getDegreeSequence(g1, 1);
         const h = getDegreeSequence(g2, 2);
 
         console.log(g);
-        console.log(h);      
+        console.log(h);
       }
 
       function getDegreeSequence(type, graph_num) {
@@ -210,18 +240,18 @@
           case "C5": {
             return {2: 5}
           }
-    
+
           case "mK2": {
             return {1: 2 * M}
           }
-    
+
           case "U2ml": {
             return {
               [L]: 1,
               1: (2 * M) + L
             }
           }
-    
+
           case "U3m": {
             return {
               [(2 * M) + 2]: 1,
