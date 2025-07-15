@@ -134,21 +134,24 @@
       const Q2_2 = document.getElementById('input-q2-2');
       const DYNAMIC_P_2 = document.getElementById('dynamic-p-inputs-2');
       const DYNAMIC_P_1 = document.getElementById('dynamic-p-inputs-1');
-      M_1.classList.add('hidden');
-      L_1.classList.add('hidden');
-      P_1.classList.add('hidden');
-      Q_1.classList.add('hidden');
-      Q1_1.classList.add('hidden');
-      Q2_1.classList.add('hidden');
-      M_2.classList.add('hidden');
-      P_2.classList.add('hidden');
-      Q_2.classList.add('hidden');
-      Q1_2.classList.add('hidden');
-      Q2_2.classList.add('hidden');
-      DYNAMIC_P_2.classList.add('hidden');
-      DYNAMIC_P_1.classList.add('hidden');
+
       function showInputsOne() {
         const selection1 = document.getElementById('graph-type-1').value;
+
+        M_1.classList.add('hidden');
+        document.getElementById('m-1').value = "";
+        L_1.classList.add('hidden');
+        document.getElementById('l-1').value = "";
+        P_1.classList.add('hidden');
+        document.getElementById('p-1').value = "";
+        Q_1.classList.add('hidden');
+        document.getElementById('q-1').value = "";
+        Q1_1.classList.add('hidden');
+        document.getElementById('q1-1').value = "";
+        Q2_1.classList.add('hidden');
+        document.getElementById('q2-1').value = "";
+        DYNAMIC_P_1.classList.add('hidden');
+        DYNAMIC_P_1.innerHTML = "";
 
         if (selection1 === 'mK2') {
           M_1.classList.remove('hidden');
@@ -174,6 +177,19 @@
 
       function showInputsTwo() {
         const selection2 = document.getElementById('graph-type-2').value;
+
+        M_2.classList.add('hidden');
+        document.getElementById('m-2').value = "";
+        P_2.classList.add('hidden');
+        document.getElementById('p-2').value = "";
+        Q_2.classList.add('hidden');
+        document.getElementById('q-2').value = "";
+        Q1_2.classList.add('hidden');
+        document.getElementById('q1-2').value = "";
+        Q2_2.classList.add('hidden');
+        document.getElementById('q2-2').value = "";
+        DYNAMIC_P_2.classList.add('hidden');
+        DYNAMIC_P_2.innerHTML = "";
 
         if (selection2 === 'Spq') {
           P_2.classList.remove('hidden');
