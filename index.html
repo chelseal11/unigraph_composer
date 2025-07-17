@@ -7,201 +7,310 @@
         display: none;
       }
       .static_height {
-        height: 100px;
+        height: 300px;
+      }
+      .dropdown-container {
+        display: flex;
+        gap: 20px;
+      }
+      .dropdown-container .static_height {
+        flex: 1;
       }
     </style>
   </head>
   <body>
     <label for="graph-type">Choose two indecomposable components:</label>
 
-    <div class="static_height">
-      <div>
-        <select id="graph-type-1" name="graph-type-1" onchange="showInputsOne()">
-          <option value="C5">C₅</option>
-          <option value="mK2">mK₂ for m ≥ 2</option>
-          <option value="U2ml">U2(m, ℓ), m ≥ 1, ℓ ≥ 2</option>
-          <option value="U3m">U3(m), m ≥ 1</option>
-          <option value="SVG">Single-vertex graph</option>
-          <option value="Spq">S(p, q), p ≥ 1, q ≥ 2 </option>
-          <option value="S2">S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm</option>
-          <option value="S3">S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1</option>
-          <option value="S4">S4(p, q) p ≥ 1, q ≥ 1</option>
-        </select>
-      </div>
-
-      <div id="input-p-1" class="hidden">
-        <label for="p">Enter p:</label>
-        <input type="number" id="p-1" name="p" min="1">
-      </div>
-
-      <div id="input-l-1" class="hidden">
-        <label for="l">Enter 1:</label>
-        <input type="number" id="l-1" name="l" min="1">
-      </div>
-
-      <div id="input-q-1" class="hidden">
-        <label for="q">Enter q:</label>
-        <input type="number" id="q-1" name="q" min="1">
-      </div>
-
-      <div id="input-q1-1" class="hidden">
-        <label for="q1">Enter q1:</label>
-        <input type="number" id="q1-1" name="q1" min="1">
-      </div>
-
-      <div id="input-q2-1" class="hidden">
-        <label for="q2">Enter q2:</label>
-        <input type="number" id="q2-1" name="q2" min="1">
-      </div>
-
-      <div id="input-m-1" class="hidden">
-        <label for="m">Enter m:</label>
-        <input type="number" id="m-1" name="m" min="2">
-      </div>
-
-      <div id="dynamic-p-inputs-1" class="hidden">
-        <!-- Dynamic p1 through pm inputs will be created here -->
-      </div>
-
-      <div id="input-l-1" class="hidden">
-        <label for="l">Enter l:</label>
-        <input type="number" id="l-1" name="l" min="1">
-      </div>
-    </div>
-
-
-    <div class="static_height">
-      <select id="graph-type-2" name="graph-type-2" onchange="showInputsTwo()">
-        <option value="SVG">Single-vertex graph</option>
-        <option value="Spq">S(p, q), p ≥ 1, q ≥ 2 </option>
-        <option value="S2">S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm</option>
-        <option value="S3">S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1</option>
-        <option value="S4">S4(p, q) p ≥ 1, q ≥ 1</option>
-      </select>
-
-      <div id="input-m-2" class="hidden" onchange="showInputsS2()">
-        <label for="m">Enter m:</label>
-        <input type="number" id="m-2" name="m" min="1">
-      </div>
-
-      <div id="dynamic-p-inputs-2" class="hidden">
-        <!-- Dynamic p1 through pm inputs will be created here -->
-      </div>
-
-      <div id="input-p-2" class="hidden">
-        <label for="p">Enter p:</label>
-        <input type="number" id="p-2" name="p" min="1">
-      </div>
-
-      <div id="input-q-2" class="hidden">
-        <label for="q">Enter q:</label>
-        <input type="number" id="q-2" name="q" min="1">
-      </div>
-
-      <div id="input-q1-2" class="hidden">
-        <label for="q1">Enter q1:</label>
-        <input type="number" id="q1-2" name="q1" min="1">
-      </div>
-
-      <div id="input-q2-2" class="hidden">
-        <label for="q2">Enter q2:</label>
-        <input type="number" id="q2-2" name="q2" min="1">
-      </div>
+    <div class="dropdown-container">
+      <!-- Dynamic HTML will be generated here -->
     </div>
 
     <button onclick="computeComposition()">Compute Composition</button>
 
     <script>
+      // Configuration object for graph types and their required inputs
+      const GRAPH_CONFIG = {
+        'C5': {
+          inputs: [],
+          validation: [],
+          degSequence: () => ({2: 5})
+        },
+        'mK2': {
+          inputs: ['m'],
+          validation: [{ param: 'm', min: 2, name: 'mK₂' }],
+          degSequence: ({m}) => ({1: 2 * m})
+        },
+        'U2ml': {
+          inputs: ['m', 'l'],
+          validation: [
+            { param: 'm', min: 1, name: 'U2(m, l)' },
+            { param: 'l', min: 2, name: 'U2(m, l)', displayName: 'l' }
+          ],
+          degSequence: ({m, l}) => ({
+            [l]: 1,
+            1: (2 * m) + l
+          })
+        },
+        'U3m': {
+          inputs: ['m'],
+          validation: [{ param: 'm', min: 1, name: 'U3(m)' }],
+          degSequence: ({m}) => ({
+            [(2 * m) + 2]: 1,
+            2: (2 * m) + 3
+          })
+        },
+        'SVG': {
+          inputs: [],
+          validation: [],
+          degSequence: () => ({
+            A: {0: 1},
+            B: {null: null}
+          }),
+          composition: (h) => {
+            console.log("h: ", h);
 
-      const M_1 = document.getElementById('input-m-1');
-      const L_1 = document.getElementById('input-l-1');
-      const P_1 = document.getElementById('input-p-1');
-      const Q_1 = document.getElementById('input-q-1');
-      const Q1_1 = document.getElementById('input-q1-1');
-      const Q2_1 = document.getElementById('input-q2-1');
-      const M_2 = document.getElementById('input-m-2');
-      const P_2 = document.getElementById('input-p-2');
-      const Q_2 = document.getElementById('input-q-2');
-      const Q1_2 = document.getElementById('input-q1-2');
-      const Q2_2 = document.getElementById('input-q2-2');
-      const DYNAMIC_P_2 = document.getElementById('dynamic-p-inputs-2');
-      const DYNAMIC_P_1 = document.getElementById('dynamic-p-inputs-1');
-      M_1.classList.add('hidden');
-      L_1.classList.add('hidden');
-      P_1.classList.add('hidden');
-      Q_1.classList.add('hidden');
-      Q1_1.classList.add('hidden');
-      Q2_1.classList.add('hidden');
-      M_2.classList.add('hidden');
-      P_2.classList.add('hidden');
-      Q_2.classList.add('hidden');
-      Q1_2.classList.add('hidden');
-      Q2_2.classList.add('hidden');
-      DYNAMIC_P_2.classList.add('hidden');
-      DYNAMIC_P_1.classList.add('hidden');
-      function showInputsOne() {
-        const selection1 = document.getElementById('graph-type-1').value;
+            let sumA;
+            let transformedB = {};
 
-        if (selection1 === 'mK2') {
-          M_1.classList.remove('hidden');
-        } else if (selection1 === 'U2ml') {
-          M_1.classList.remove('hidden');
-          L_1.classList.remove('hidden');
-        } else if (selection1 === 'U3m') {
-          M_1.classList.remove('hidden');
-        } else if (selection1 === 'Spq') {
-          P_1.classList.remove('hidden');
-          Q_1.classList.remove('hidden');
-        } else if (selection1 === 'S2') {
-          M_1.classList.remove('hidden');
-        } else if (selection1 === 'S3') {
-          P_1.classList.remove('hidden');
-          Q1_1.classList.remove('hidden');
-          Q2_1.classList.remove('hidden');
-        } else if (selection1 === 'S4') {
-          P_1.classList.remove('hidden');
-          Q_1.classList.remove('hidden');
+            if (h.A !== undefined) {
+              const sumFromA = Object.values(h.A || {}).reduce((sum, val) => sum + val, 0);
+              const sumFromB = Object.values(h.B || {}).reduce((sum, val) => sum + val, 0);
+              sumA = sumFromA + sumFromB;
+
+              // Transform ALL pairs from both h.A and h.B
+              Object.entries(h.A || {}).forEach(([k, v]) => {
+                if (k !== 'null') {
+                  transformedB[parseInt(k) + 1] = v;
+                }
+              });
+              Object.entries(h.B || {}).forEach(([k, v]) => {
+                if (k !== 'null') {
+                  transformedB[parseInt(k) + 1] = v;
+                }
+              });
+            } else {
+              // h is a simple degree sequence (from other graph types)
+              sumA = Object.values(h).reduce((sum, val) => sum + val, 0);
+              Object.entries(h).forEach(([k, v]) => {
+                transformedB[parseInt(k) + 1] = v;
+              });
+            }
+
+            return {
+              A: {[sumA]: 1}, // total of all values: 1
+              B: transformedB // add 1 to each key and keep the value
+            }
+          }
+        },
+        'Spq': {
+          inputs: ['p', 'q'],
+          validation: [
+            { param: 'p', min: 1, name: 'S(p, q)' },
+            { param: 'q', min: 2, name: 'S(p, q)' }
+          ],
+          degSequence: ({p, q}) => ({
+            A: {[p + q - 1]: q},
+            B: {1: p * q}
+          })
+        },
+        'S2': {
+          inputs: ['m'],
+          validation: [{ param: 'm', min: 2, name: 'S2' }],
+          dynamic: true,
+          degSequence: () => ({
+            A: {0: 1},
+            B: {null: null}
+          })
+        },
+        'S3': {
+          inputs: ['p', 'q1', 'q2'],
+          validation: [
+            { param: 'p', min: 1, name: 'S3(p, q1, q2)' },
+            { param: 'q1', min: 2, name: 'S3(p, q1, q2)' },
+            { param: 'q2', min: 1, name: 'S3(p, q1, q2)' }
+          ],
+          degSequence: ({p, q1, q2}) => ({
+            A: {[p + q1 + q2]: q1 + q2},
+            B: {
+              [q1]: 1,
+              1: (p * q1) + ((p + 1) * q2)
+            }
+          })
+        },
+        'S4': {
+          inputs: ['p', 'q'],
+          validation: [
+            { param: 'p', min: 1, name: 'S4(p, q)' },
+            { param: 'q', min: 1, name: 'S4(p, q)' }
+          ],
+          degSequence: ({p, q}) => ({
+            A: {
+              [2 * (p + q + 1) + q]: 1,
+              [p + q + 3]: q + 2
+            },
+            B: {2: (q * p) + (2 * p) + q + 1}
+          })
+        }
+      };
+
+      // Define which graph types are available for each dropdown
+      const GRAPH_OPTIONS = {
+        1: ['C5', 'mK2', 'U2ml', 'U3m', 'SVG', 'Spq', 'S2', 'S3', 'S4'],
+        2: ['SVG', 'Spq', 'S2', 'S3', 'S4']
+      };
+
+      const GRAPH_LABELS = {
+        'C5': 'C₅',
+        'mK2': 'mK₂ for m ≥ 2',
+        'U2ml': 'U2(m, l), m ≥ 1, l ≥ 2',
+        'U3m': 'U3(m), m ≥ 1',
+        'SVG': 'Single-vertex graph',
+        'Spq': 'S(p, q), p ≥ 1, q ≥ 2',
+        'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
+        'S3': 'S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1',
+        'S4': 'S4(p, q) p ≥ 1, q ≥ 1'
+      };
+
+      // Generate HTML for input fields dynamically
+      function generateInputHTML(inputType, graph_num) {
+        const inputLabels = {
+          'p': 'Enter p:',
+          'l': 'Enter l:',
+          'q': 'Enter q:',
+          'q1': 'Enter q1:',
+          'q2': 'Enter q2:',
+          'm': 'Enter m:'
+        };
+
+                const minValues = {
+          'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
+        };
+
+        const onchange = inputType === 'm' ? ` onchange="showInputsS2(${graph_num})"` : '';
+
+        return `
+          <div id="input-${inputType}-${graph_num}" class="hidden">
+            <label for="${inputType}">${inputLabels[inputType]}</label>
+            <input type="number" id="${inputType}-${graph_num}" name="${inputType}" min="${minValues[inputType]}"${onchange}>
+          </div>
+        `;
+      }
+
+      function generateSelectHTML(graph_num) {
+        const options = GRAPH_OPTIONS[graph_num].map(type =>
+          `<option value="${type}">${GRAPH_LABELS[type]}</option>`
+        ).join('');
+
+        return `
+          <select id="graph-type-${graph_num}" name="graph-type-${graph_num}" onchange="showInputs(${graph_num})">
+            ${options}
+          </select>
+        `;
+      }
+
+      function generateGraphContainerHTML(graph_num) {
+        const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm'];
+        const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
+
+        return `
+          <div class="static_height">
+            ${generateSelectHTML(graph_num)}
+            ${inputsHTML}
+            <div id="dynamic-p-inputs-${graph_num}" class="hidden">
+              <!-- Dynamic p1 through pm inputs will be created here -->
+            </div>
+          </div>
+        `;
+      }
+
+      // Initialize the HTML dynamically
+      function initializeHTML() {
+        const dropdownContainer = document.querySelector('.dropdown-container');
+        dropdownContainer.innerHTML = `
+          ${generateGraphContainerHTML(1)}
+          ${generateGraphContainerHTML(2)}
+        `;
+      }
+
+      function hideAndClearInput(element, inputId) {
+        element.classList.add('hidden');
+        document.getElementById(inputId).value = "";
+      }
+
+      function showInputElement(inputType, graph_num) {
+        const element = document.getElementById(`input-${inputType}-${graph_num}`);
+        if (element) element.classList.remove('hidden');
+      }
+
+      function hideAllInputs(graph_num) {
+        const inputTypes = ['m', 'l', 'p', 'q', 'q1', 'q2'];
+        inputTypes.forEach(type => {
+          const element = document.getElementById(`input-${type}-${graph_num}`);
+          if (element) hideAndClearInput(element, `${type}-${graph_num}`);
+        });
+
+        const dynamicP = document.getElementById(`dynamic-p-inputs-${graph_num}`);
+        if (dynamicP) {
+          dynamicP.classList.add('hidden');
+          dynamicP.innerHTML = "";
         }
       }
 
-      function showInputsTwo() {
-        const selection2 = document.getElementById('graph-type-2').value;
+      function getParameterValues(graph_num) {
+        const params = {};
+        const inputTypes = ['m', 'l', 'p', 'q', 'q1', 'q2'];
 
-        if (selection2 === 'Spq') {
-          P_2.classList.remove('hidden');
-          Q_2.classList.remove('hidden');
-        } else if (selection2 === 'S2') {
-          M_2.classList.remove('hidden');
-        } else if (selection2 === 'S3') {
-          P_2.classList.remove('hidden');
-          Q1_2.classList.remove('hidden');
-          Q2_2.classList.remove('hidden');
-        } else if (selection2 === 'S4') {
-          P_2.classList.remove('hidden');
-          Q_2.classList.remove('hidden');
+        inputTypes.forEach(type => {
+          const element = document.getElementById(`${type}-${graph_num}`);
+          params[type] = element ? Number(element.value) : undefined;
+        });
+
+        return params;
+      }
+
+      function showInputs(graph_num) {
+        const selection = document.getElementById('graph-type-' + graph_num).value;
+        const config = GRAPH_CONFIG[selection];
+
+        // Hide all inputs first
+        hideAllInputs(graph_num);
+
+        // Show required inputs based on configuration
+        if (config && config.inputs) {
+          config.inputs.forEach(inputType => {
+            showInputElement(inputType, graph_num);
+          });
         }
       }
 
-      function showInputsS2() {
-        const mValue = document.getElementById('m-2').value;
+      function showInputsS2(graph_num) {
+        const selection = document.getElementById('graph-type-' + graph_num).value;
+        if (selection != "S2") {
+          return;
+        }
+        const mValue = document.getElementById('m-' + graph_num).value;
         const m = parseInt(mValue);
 
         // Clear existing dynamic inputs
-        DYNAMIC_P_2.innerHTML = '';
+        const DYNAMIC_P = document.getElementById('dynamic-p-inputs-' + graph_num);
+        if (DYNAMIC_P) {
+          DYNAMIC_P.innerHTML = '';
+          DYNAMIC_P.classList.add('hidden');
+        }
 
         if (m && m >= 1) {
           // Create p1 through pm inputs
           for (let i = 1; i <= m; i++) {
             const inputDiv = document.createElement('div');
             inputDiv.innerHTML = `
-              <label for="p${i}-2">Enter p${i}:</label>
-              <input type="number" id="p${i}-2" name="p${i}" min="1">
+              <label for="p${i}-${graph_num}">Enter p${i}:</label>
+              <input type="number" id="p${i}-${graph_num}" name="p${i}" min="1">
             `;
-            DYNAMIC_P_2.appendChild(inputDiv);
+            DYNAMIC_P.appendChild(inputDiv);
           }
-          DYNAMIC_P_2.classList.remove('hidden');
+          DYNAMIC_P.classList.remove('hidden');
         } else {
-          DYNAMIC_P_2.classList.add('hidden');
+          DYNAMIC_P.classList.add('hidden');
         }
       }
 
@@ -214,96 +323,108 @@
         const g = getDegreeSequence(g1, 1);
         const h = getDegreeSequence(g2, 2);
 
-        console.log(g);
-        console.log(h);
+        // Check if validation failed for either graph
+        if (g === null || h === null) {
+          return; // Don't proceed if validation failed
+        }
+
+        const result = compose(g, h, g2);
+        console.log("Result: ", result);
       }
 
       function getDegreeSequence(type, graph_num) {
-        let M, L, P, Q, Q1, Q2;
-        if (graph_num == 1) {
-          M = Number(document.getElementById('m-1').value);
-          L = Number(document.getElementById('l-1').value);
-          P = Number(document.getElementById('p-1').value);
-          Q = Number(document.getElementById('q-1').value);
-          Q1 = Number(document.getElementById('q1-1').value);
-          Q2 = Number(document.getElementById('q2-1').value);
-        } else {
-          M = Number(document.getElementById('m-2').value);
-          P = Number(document.getElementById('p-2').value);
-          Q = Number(document.getElementById('q-2').value);
-          Q1 = Number(document.getElementById('q1-2').value);
-          Q2 = Number(document.getElementById('q2-2').value);
+        const params = getParameterValues(graph_num);
+        const { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 } = params;
+
+        if (!checkValidity(type, M, L, P, Q, Q1, Q2, graph_num)) {
+          return null; // Return null if validation fails
         }
 
-        switch (type) {
+        const config = GRAPH_CONFIG[type];
+        if (!config) {
+          alert("Unknown graph type: " + type);
+          return null;
+        }
 
-          case "C5": {
-            return {2: 5}
+        return config.degSequence(params);
+      }
+
+      function checkValidity(type, M, L, P, Q, Q1, Q2, graph_num) {
+        const config = GRAPH_CONFIG[type];
+        if (!config) {
+          alert("Unknown graph type: " + type);
+          return false;
+        }
+
+        function isValidNumber(value, min) {
+          return value !== null && value !== undefined && value !== "" && !isNaN(value) && Number(value) >= min;
+        }
+
+        const paramValues = { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 };
+
+        // Validate standard parameters
+        for (const validation of config.validation) {
+          const value = paramValues[validation.param];
+          const displayName = validation.displayName || validation.param;
+
+          if (!isValidNumber(value, validation.min)) {
+            alert(`${displayName} must be defined and at least ${validation.min} for ${validation.name}`);
+            return false;
           }
+        }
 
-          case "mK2": {
-            return {1: 2 * M}
+        // Special handling for S2 dynamic inputs
+        if (type === 'S2') {
+          const pValues = [];
+          for (let i = 1; i <= M; i++) {
+            const pElement = document.getElementById(`p${i}-${graph_num}`);
+            if (!pElement) {
+              alert(`p${i} input not found for S2`);
+              return false;
+            }
+            const pValue = Number(pElement.value);
+            if (!isValidNumber(pValue, 1)) {
+              alert(`p${i} must be defined and at least 1 for S2`);
+              return false;
+            }
+            pValues.push(pValue);
           }
-
-          case "U2ml": {
-            return {
-              [L]: 1,
-              1: (2 * M) + L
+          // Check that p1 > p2 > ... > pm
+          for (let i = 0; i < pValues.length - 1; i++) {
+            if (pValues[i] <= pValues[i + 1]) {
+              alert(`p values must be in descending order: p${i + 1} > p${i + 2} > ... > p${M} for S2`);
+              return false;
             }
           }
+        }
 
-          case "U3m": {
-            return {
-              [(2 * M) + 2]: 1,
-              2: (2 * M) + 3
-            }
-          }
+        return true;
+      }
 
-          case "SVG": {
-            return {
-              A: {0: 1},
-              B: {null: null}
-            }
-          }
+      function getComposition(g, h, g2) {
+        const config = GRAPH_CONFIG[g2];
+        if (!config) {
+          alert("Unknown graph type: " + g2);
+          return null;
+        }
 
-          case "Spq": {
-            return {
-              A: {[P + Q - 1]: Q},
-              B: {1: P * Q}
-            }
-          }
-
-          case "S2": {
-            return {
-              A: {0: 1},
-              B: {null: null}
-            }
-          }
-
-          case "S3": {
-            return {
-              A: {[P + Q1 + Q2]: Q1 + Q2},
-              B: {
-                [Q1]: 1,
-                1: (P * Q1) + ((P + 1) * Q2)
-              }
-            }
-          }
-
-          case "S4": {
-            return {
-              A: {
-                [2 * (P + Q + 1) + Q]: 1,
-                [P + Q + 3]: Q + 2
-              },
-              B: {2: (Q * P) + (2 * P) + Q + 1}
-            }
-          }
-
-          default:
-            alert("Unknown graph type: " + type);
+        // Check if this graph type has a composition method
+        if (config.composition && typeof config.composition === 'function') {
+          return config.composition(g);
+        } else {
+          // Default composition behavior for graphs without custom composition
+          return {};
         }
       }
+
+      function compose(g, h, g2) {
+        return getComposition(g, h, g2);
+      }
+
+
+
+      // Initialize the HTML when the page loads
+      document.addEventListener('DOMContentLoaded', initializeHTML);
     </script>
   </body>
 </html>
