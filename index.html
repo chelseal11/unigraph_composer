@@ -27,6 +27,11 @@
 
     <button onclick="computeComposition()">Compute Composition</button>
 
+    <div id="result-container" style="margin-top: 20px;">
+      <label for="composition-result">Composition Result:</label>
+      <textarea id="composition-result" readonly style="width: 90%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Click 'Compute Composition' to see the result here..."></textarea>
+    </div>
+
     <script>
       // Configuration object for graph types and their required inputs
       const GRAPH_CONFIG = {
@@ -64,43 +69,8 @@
           validation: [],
           degSequence: () => ({
             A: {0: 1},
-            B: {null: null}
-          }),
-          composition: (h) => {
-            console.log("h: ", h);
-
-            let sumA;
-            let transformedB = {};
-
-            if (h.A !== undefined) {
-              const sumFromA = Object.values(h.A || {}).reduce((sum, val) => sum + val, 0);
-              const sumFromB = Object.values(h.B || {}).reduce((sum, val) => sum + val, 0);
-              sumA = sumFromA + sumFromB;
-
-              // Transform ALL pairs from both h.A and h.B
-              Object.entries(h.A || {}).forEach(([k, v]) => {
-                if (k !== 'null') {
-                  transformedB[parseInt(k) + 1] = v;
-                }
-              });
-              Object.entries(h.B || {}).forEach(([k, v]) => {
-                if (k !== 'null') {
-                  transformedB[parseInt(k) + 1] = v;
-                }
-              });
-            } else {
-              // h is a simple degree sequence (from other graph types)
-              sumA = Object.values(h).reduce((sum, val) => sum + val, 0);
-              Object.entries(h).forEach(([k, v]) => {
-                transformedB[parseInt(k) + 1] = v;
-              });
-            }
-
-            return {
-              A: {[sumA]: 1}, // total of all values: 1
-              B: transformedB // add 1 to each key and keep the value
-            }
-          }
+            B: {}
+          })
         },
         'Spq': {
           inputs: ['p', 'q'],
@@ -119,7 +89,7 @@
           dynamic: true,
           degSequence: () => ({
             A: {0: 1},
-            B: {null: null}
+            B: {}
           })
         },
         'S3': {
@@ -153,6 +123,59 @@
         }
       };
 
+      const calculateComplement = (g) => {
+        const sizeOfG = calculateSizeOfGraph(g);
+        if (g.A !== undefined) {
+          return {
+            A: complementSequence(g.A, calculateSizeOfGraph(g)),
+            B: complementSequence(g.B, calculateSizeOfGraph(g))
+          };
+        } else {
+          return complementSequence(g, calculateSizeOfGraph(g));
+        }
+      };
+
+      const complementSequence = (sequence, sizeOfG) => {
+        const complement = {};
+        Object.entries(sequence).forEach(([k, v]) => {
+          const newDegree = sizeOfG - k - 1;
+          complement[newDegree] = v;
+        });
+        return complement;
+      };
+
+      const calculateInverse = (g) => {
+        if (g.A !== undefined) {
+          return {
+            A: invertB(g.B),
+            B: invertA(g.A)
+          };
+        } else {
+          alert(`Graph is not split and can't be inverted`);
+          return null;
+        }
+      };
+
+      const invertA = (g) => {
+        const inverse = {};
+        const sizeOfG = calculateSizeOfGraph(g) - 1;
+        Object.entries(g).forEach(([k, v]) => {
+          const newDegree = k - sizeOfG;
+          inverse[newDegree] = v;
+        });
+        return inverse;
+      };
+
+      const invertB = (g) => {
+        const inverse = {};
+        const sizeOfG = calculateSizeOfGraph(g) - 1;
+        Object.entries(g).forEach(([k, v]) => {
+          const newDegree = k + sizeOfG;
+          inverse[newDegree] = v;
+        });
+        return inverse;
+      };
+
       // Define which graph types are available for each dropdown
       const GRAPH_OPTIONS = {
         1: ['C5', 'mK2', 'U2ml', 'U3m', 'SVG', 'Spq', 'S2', 'S3', 'S4'],
@@ -169,6 +192,13 @@
         'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
         'S3': 'S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1',
         'S4': 'S4(p, q) p ≥ 1, q ≥ 1'
+      };
+
+      const TRANSFORMATION_OPTIONS = {
+        'standard': 'Standard',
+        'inverse': 'Inverse',
+        'complement': 'Complement',
+        'inverseComplement': 'Complement of Inverse'
       };
 
       // Generate HTML for input fields dynamically
@@ -196,7 +226,7 @@
         `;
       }
 
-      function generateSelectHTML(graph_num) {
+            function generateSelectHTML(graph_num) {
         const options = GRAPH_OPTIONS[graph_num].map(type =>
           `<option value="${type}">${GRAPH_LABELS[type]}</option>`
         ).join('');
@@ -208,13 +238,29 @@
         `;
       }
 
-      function generateGraphContainerHTML(graph_num) {
+      function generateTransformationHTML(graph_num) {
+        const options = Object.keys(TRANSFORMATION_OPTIONS).map(type =>
+          `<option value="${type}">${TRANSFORMATION_OPTIONS[type]}</option>`
+        ).join('');
+
+        return `
+          <div style="margin-top: 10px;">
+            <label for="transformation-${graph_num}">Transformation:</label>
+            <select id="transformation-${graph_num}" name="transformation-${graph_num}">
+              ${options}
+            </select>
+          </div>
+        `;
+      }
+
+            function generateGraphContainerHTML(graph_num) {
         const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm'];
         const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
 
         return `
           <div class="static_height">
             ${generateSelectHTML(graph_num)}
+            ${generateTransformationHTML(graph_num)}
             ${inputsHTML}
             <div id="dynamic-p-inputs-${graph_num}" class="hidden">
               <!-- Dynamic p1 through pm inputs will be created here -->
@@ -314,22 +360,52 @@
         }
       }
 
+      function applyTransformation(degreeSequence, transformationType, graphType) {
+        switch (transformationType) {
+          case 'standard':
+            return degreeSequence;
+          case 'inverse':
+            return calculateInverse(degreeSequence);
+          case 'complement':
+            return calculateComplement(degreeSequence);
+          case 'inverseComplement':
+            const inverse = calculateInverse(degreeSequence);
+            return calculateComplement(inverse);
+          default:
+            return degreeSequence;
+        }
+      }
+
       function computeComposition() {
         const g1 = document.getElementById('graph-type-1').value;
         const g2 = document.getElementById('graph-type-2').value;
+        const t1 = document.getElementById('transformation-1').value;
+        const t2 = document.getElementById('transformation-2').value;
 
-        alert(`Composing: ${g1} and ${g2}`);
+        alert(`Composing: ${TRANSFORMATION_OPTIONS[t1]} ${g1} and ${TRANSFORMATION_OPTIONS[t2]} ${g2}`);
 
-        const g = getDegreeSequence(g1, 1);
-        const h = getDegreeSequence(g2, 2);
+        let g = getDegreeSequence(g1, 1);
+        let h = getDegreeSequence(g2, 2);
 
         // Check if validation failed for either graph
         if (g === null || h === null) {
           return; // Don't proceed if validation failed
         }
 
-        const result = compose(g, h, g2);
+        // Apply transformations
+        g = applyTransformation(g, t1, g1);
+        h = applyTransformation(h, t2, g2);
+
+        if (g === null || h === null) {
+          return;
+        }
+
+        const result = compose(g, h);
         console.log("Result: ", result);
+
+        // Display result in the text field
+        const resultTextarea = document.getElementById('composition-result');
+        resultTextarea.value = formatResult(result);
       }
 
       function getDegreeSequence(type, graph_num) {
@@ -401,27 +477,131 @@
         return true;
       }
 
-      function getComposition(g, h, g2) {
-        const config = GRAPH_CONFIG[g2];
-        if (!config) {
-          alert("Unknown graph type: " + g2);
-          return null;
-        }
-
-        // Check if this graph type has a composition method
-        if (config.composition && typeof config.composition === 'function') {
-          return config.composition(g);
+      function calculateSizeOfHA(h) {
+        if (h.A !== undefined) {
+          return Object.values(h.A).reduce((sum, val) => sum + val, 0);
         } else {
-          // Default composition behavior for graphs without custom composition
-          return {};
+          return Object.values(h).reduce((sum, val) => sum + val, 0);
         }
       }
 
-      function compose(g, h, g2) {
-        return getComposition(g, h, g2);
+      function calculateSizeOfGraph(g) {
+        if (g.A !== undefined) {
+          return Object.values(g.A).reduce((sum, val) => sum + val, 0) + Object.values(g.B).reduce((sum, val) => sum + val, 0);
+        } else {
+          return Object.values(g).reduce((sum, val) => sum + val, 0);
+        }
       }
 
+      function composeG(g, h) {
+        let transformedGraph = {};
+        const sizeOfHA = calculateSizeOfHA(h);
+        if (g.A !== undefined) {
+          transformedGraph.A = {};
+          transformedGraph.B = {};
+          Object.entries(g.A).forEach(([k, v]) => {
+            transformedGraph.A[parseInt(k) + sizeOfHA] = v;
+          });
+          Object.entries(g.B).forEach(([k, v]) => {
+            transformedGraph.B[parseInt(k) + sizeOfHA] = v;
+          });
+        } else {
+          Object.entries(g).forEach(([k, v]) => {
+            transformedGraph[parseInt(k) + sizeOfHA] = v;
+          });
+        }
+        return transformedGraph;
+      }
 
+      function composeH(g, h) {
+        let transformedGraph = {};
+        const sizeOfG = calculateSizeOfGraph(g);
+        if (g.A !== undefined) {
+          transformedGraph.A = {};
+          transformedGraph.B = {};
+          Object.entries(h.A).forEach(([k, v]) => {
+            transformedGraph.A[parseInt(k) + sizeOfG] = v;
+          });
+          Object.entries(h.B).forEach(([k, v]) => {
+            transformedGraph.B[parseInt(k)] = v;
+          });
+        } else {
+          transformedGraph.A = {};
+          transformedGraph.B = {};
+          Object.entries(h.A).forEach(([k, v]) => {
+            transformedGraph.A[parseInt(k) + sizeOfG] = v;
+          });
+          Object.entries(h.B).forEach(([k, v]) => {
+            transformedGraph.B[parseInt(k)] = v;
+          });
+        }
+        return transformedGraph;
+      }
+
+      function combinedGraphs(g, h) {
+        // if they both have A, then we need to combine them
+        if (g.A !== undefined && h.A !== undefined) {
+          return {
+            A: combineGraphs([g.A, h.A]),
+            B: combineGraphs([g.B, h.B])
+          }
+        } else {
+          return {
+            A: h.A,
+            B: combineGraphs([g, h.B])
+          }
+        }
+      }
+
+      function combineGraphs(graphs) {
+        const validGraphs = graphs.filter(graph => graph !== undefined);
+        const combined = {};
+        validGraphs.forEach(graph => {
+          Object.entries(graph).forEach(([k, v]) => {
+            if (combined[k] !== undefined) {
+              combined[k] += v;
+            } else {
+              combined[k] = v;
+            }
+          });
+        });
+        return combined;
+      }
+
+      function compose(g, h) {
+        console.log("g: ", g);
+        console.log("h: ", h);
+        const composedG = composeG(g, h);
+        const composedH = composeH(g, h);
+
+        console.log("composedG: ", composedG);
+        console.log("composedH: ", composedH);
+
+        return combinedGraphs(composedG, composedH);
+      }
+
+      function formatHashmap(hashmap) {
+        if (hashmap === undefined) {
+          return "";
+        }
+        let resultString = "";
+        const numKeys = Object?.keys(hashmap)?.length;
+        Object?.keys(hashmap)?.sort((a, b) => b - a).forEach((key, index) => {
+          resultString += `${key}^${hashmap[key]} `;
+          if (index !== numKeys - 1) {
+            resultString += ", ";
+          }
+        });
+        return resultString;
+      }
+
+      function formatResult(result) {
+        let resultString = "";
+        resultString += formatHashmap(result.A);
+        resultString += "; ";
+        resultString += formatHashmap(result.B);
+        return resultString;
+      }
 
       // Initialize the HTML when the page loads
       document.addEventListener('DOMContentLoaded', initializeHTML);
