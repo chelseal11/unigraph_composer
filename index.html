@@ -227,7 +227,7 @@
         'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
         'S3': 'S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1',
         'S4': 'S4(p, q) p ≥ 1, q ≥ 1',
-        'PreviousResult': '← Use Previous Result'
+        'PreviousResult': 'Previous Result'
       };
 
       const TRANSFORMATION_OPTIONS = {
@@ -280,7 +280,14 @@
         const options = GRAPH_OPTIONS[graph_num].map(type => {
           // Disable PreviousResult option initially until there's a result
           const disabled = (type === 'PreviousResult' && previousResult === null) ? ' disabled' : '';
-          return `<option value="${type}"${disabled}>${GRAPH_LABELS[type]}</option>`;
+          let label = GRAPH_LABELS[type];
+
+          // Add the formatted result to the PreviousResult label when available
+          if (type === 'PreviousResult' && previousResult) {
+            label += ': ' + formatResult(previousResult);
+          }
+
+          return `<option value="${type}"${disabled}>${label}</option>`;
         }).join('');
 
         return `
@@ -503,11 +510,12 @@
         const resultTextarea = document.getElementById('composition-result');
         resultTextarea.value = formatResult(result);
 
-        // Enable the PreviousResult option in dropdown 1
+        // Enable the PreviousResult option in dropdown 1 and update its label
         const dropdown1 = document.getElementById('graph-type-1');
         const previousResultOption = dropdown1.querySelector('option[value="PreviousResult"]');
         if (previousResultOption) {
           previousResultOption.disabled = false;
+          previousResultOption.textContent = 'Previous Result: ' + formatResult(previousResult);
         }
               }
 
