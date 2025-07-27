@@ -265,6 +265,9 @@
             <div id="dynamic-p-inputs-${graph_num}" class="hidden">
               <!-- Dynamic p1 through pm inputs will be created here -->
             </div>
+            <div id="dynamic-q-inputs-${graph_num}" class="hidden">
+              <!-- Dynamic q1 through qm inputs will be created here -->
+            </div>
           </div>
         `;
       }
@@ -296,9 +299,16 @@
         });
 
         const dynamicP = document.getElementById(`dynamic-p-inputs-${graph_num}`);
+        const dynamicQ = document.getElementById(`dynamic-q-inputs-${graph_num}`);
+
         if (dynamicP) {
           dynamicP.classList.add('hidden');
           dynamicP.innerHTML = "";
+        }
+
+        if (dynamicQ) {
+          dynamicQ.classList.add('hidden');
+          dynamicQ.innerHTML = "";
         }
       }
 
@@ -329,7 +339,7 @@
         }
       }
 
-      function showInputsS2(graph_num) {
+            function showInputsS2(graph_num) {
         const selection = document.getElementById('graph-type-' + graph_num).value;
         if (selection != "S2") {
           return;
@@ -339,9 +349,16 @@
 
         // Clear existing dynamic inputs
         const DYNAMIC_P = document.getElementById('dynamic-p-inputs-' + graph_num);
+        const DYNAMIC_Q = document.getElementById('dynamic-q-inputs-' + graph_num);
+
         if (DYNAMIC_P) {
           DYNAMIC_P.innerHTML = '';
           DYNAMIC_P.classList.add('hidden');
+        }
+
+        if (DYNAMIC_Q) {
+          DYNAMIC_Q.innerHTML = '';
+          DYNAMIC_Q.classList.add('hidden');
         }
 
         if (m && m >= 1) {
@@ -354,9 +371,22 @@
             `;
             DYNAMIC_P.appendChild(inputDiv);
           }
+
+          // Create q1 through qm inputs
+          for (let i = 1; i <= m; i++) {
+            const inputDiv = document.createElement('div');
+            inputDiv.innerHTML = `
+              <label for="q${i}-${graph_num}">Enter q${i}:</label>
+              <input type="number" id="q${i}-${graph_num}" name="q${i}" min="1">
+            `;
+            DYNAMIC_Q.appendChild(inputDiv);
+          }
+
           DYNAMIC_P.classList.remove('hidden');
+          DYNAMIC_Q.classList.remove('hidden');
         } else {
           DYNAMIC_P.classList.add('hidden');
+          DYNAMIC_Q.classList.add('hidden');
         }
       }
 
@@ -452,6 +482,9 @@
         // Special handling for S2 dynamic inputs
         if (type === 'S2') {
           const pValues = [];
+          const qValues = [];
+
+          // Validate p1 through pm
           for (let i = 1; i <= M; i++) {
             const pElement = document.getElementById(`p${i}-${graph_num}`);
             if (!pElement) {
@@ -465,6 +498,22 @@
             }
             pValues.push(pValue);
           }
+
+          // Validate q1 through qm
+          for (let i = 1; i <= M; i++) {
+            const qElement = document.getElementById(`q${i}-${graph_num}`);
+            if (!qElement) {
+              alert(`q${i} input not found for S2`);
+              return false;
+            }
+            const qValue = Number(qElement.value);
+            if (!isValidNumber(qValue, 1)) {
+              alert(`q${i} must be defined and at least 1 for S2`);
+              return false;
+            }
+            qValues.push(qValue);
+          }
+
           // Check that p1 > p2 > ... > pm
           for (let i = 0; i < pValues.length - 1; i++) {
             if (pValues[i] <= pValues[i + 1]) {
