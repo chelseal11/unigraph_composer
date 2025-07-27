@@ -65,12 +65,21 @@
           })
         },
         'SVG': {
-          inputs: [],
+          inputs: ['partition'],
           validation: [],
-          degSequence: () => ({
-            A: {0: 1},
-            B: {}
-          })
+          degSequence: ({partition}) => {
+            if (partition === 'A') {
+              return {
+                A: {0: 1},
+                B: {}
+              };
+            } else {
+              return {
+                A: {},
+                B: {0: 1}
+              };
+            }
+          }
         },
         'Spq': {
           inputs: ['p', 'q'],
@@ -227,8 +236,22 @@
           'q': 'Enter q:',
           'q1': 'Enter q1:',
           'q2': 'Enter q2:',
-          'm': 'Enter m:'
+          'm': 'Enter m:',
+          'partition': 'Vertex location:'
         };
+
+        // Special handling for partition dropdown
+        if (inputType === 'partition') {
+          return `
+            <div id="input-${inputType}-${graph_num}" class="hidden">
+              <label for="${inputType}">${inputLabels[inputType]}</label>
+              <select id="${inputType}-${graph_num}" name="${inputType}">
+                <option value="A">Partition A</option>
+                <option value="B">Partition B</option>
+              </select>
+            </div>
+          `;
+        }
 
                 const minValues = {
           'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
@@ -272,7 +295,7 @@
       }
 
             function generateGraphContainerHTML(graph_num) {
-        const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm'];
+        const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm', 'partition'];
         const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
 
         return `
@@ -297,11 +320,19 @@
           ${generateGraphContainerHTML(1)}
           ${generateGraphContainerHTML(2)}
         `;
+
+        showInputs(1);
+        showInputs(2);
       }
 
       function hideAndClearInput(element, inputId) {
         element.classList.add('hidden');
-        document.getElementById(inputId).value = "";
+        const inputElement = document.getElementById(inputId);
+        if (inputElement.tagName === 'SELECT') {
+          inputElement.selectedIndex = 0; // Reset to first option
+        } else {
+          inputElement.value = "";
+        }
       }
 
       function showInputElement(inputType, graph_num) {
@@ -310,7 +341,7 @@
       }
 
       function hideAllInputs(graph_num) {
-        const inputTypes = ['m', 'l', 'p', 'q', 'q1', 'q2'];
+        const inputTypes = ['m', 'l', 'p', 'q', 'q1', 'q2', 'partition'];
         inputTypes.forEach(type => {
           const element = document.getElementById(`input-${type}-${graph_num}`);
           if (element) hideAndClearInput(element, `${type}-${graph_num}`);
@@ -338,6 +369,10 @@
           const element = document.getElementById(`${type}-${graph_num}`);
           params[type] = element ? Number(element.value) : undefined;
         });
+
+        // Handle partition parameter separately since it's a string, not a number
+        const partitionElement = document.getElementById(`partition-${graph_num}`);
+        params.partition = partitionElement ? partitionElement.value : undefined;
 
         return params;
       }
