@@ -267,7 +267,7 @@
         `;
       }
 
-            function generateSelectHTML(graph_num) {
+      function generateSelectHTML(graph_num) {
         const options = GRAPH_OPTIONS[graph_num].map(type =>
           `<option value="${type}">${GRAPH_LABELS[type]}</option>`
         ).join('');
@@ -294,7 +294,7 @@
         `;
       }
 
-            function generateGraphContainerHTML(graph_num) {
+      function generateGraphContainerHTML(graph_num) {
         const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm', 'partition'];
         const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
 
@@ -313,7 +313,6 @@
         `;
       }
 
-      // Initialize the HTML dynamically
       function initializeHTML() {
         const dropdownContainer = document.querySelector('.dropdown-container');
         dropdownContainer.innerHTML = `
@@ -638,26 +637,15 @@
 
       function composeH(g, h) {
         let transformedGraph = {};
+        transformedGraph.A = {};
+        transformedGraph.B = {};
         const sizeOfG = calculateSizeOfGraph(g);
-        if (g.A !== undefined) {
-          transformedGraph.A = {};
-          transformedGraph.B = {};
-          Object.entries(h.A).forEach(([k, v]) => {
-            transformedGraph.A[parseInt(k) + sizeOfG] = v;
-          });
-          Object.entries(h.B).forEach(([k, v]) => {
-            transformedGraph.B[parseInt(k)] = v;
-          });
-        } else {
-          transformedGraph.A = {};
-          transformedGraph.B = {};
-          Object.entries(h.A).forEach(([k, v]) => {
-            transformedGraph.A[parseInt(k) + sizeOfG] = v;
-          });
-          Object.entries(h.B).forEach(([k, v]) => {
-            transformedGraph.B[parseInt(k)] = v;
-          });
-        }
+        Object.entries(h.A).forEach(([k, v]) => {
+          transformedGraph.A[parseInt(k) + sizeOfG] = v;
+        });
+        Object.entries(h.B).forEach(([k, v]) => {
+          transformedGraph.B[parseInt(k)] = v;
+        });
         return transformedGraph;
       }
 
