@@ -33,6 +33,9 @@
     </div>
 
     <script>
+      // Global variable to store the previous composition result
+      let previousResult = null;
+
       // Configuration object for graph types and their required inputs
       const GRAPH_CONFIG = {
         'C5': {
@@ -147,6 +150,11 @@
             },
             B: {2: (q * p) + (2 * p) + q + 1}
           })
+        },
+        'PreviousResult': {
+          inputs: [],
+          validation: [],
+          degSequence: () => previousResult
         }
       };
 
@@ -205,7 +213,7 @@
 
       // Define which graph types are available for each dropdown
       const GRAPH_OPTIONS = {
-        1: ['C5', 'mK2', 'U2ml', 'U3m', 'SVG', 'Spq', 'S2', 'S3', 'S4'],
+        1: ['C5', 'mK2', 'U2ml', 'U3m', 'SVG', 'Spq', 'S2', 'S3', 'S4', 'PreviousResult'],
         2: ['SVG', 'Spq', 'S2', 'S3', 'S4']
       };
 
@@ -218,7 +226,8 @@
         'Spq': 'S(p, q), p ≥ 1, q ≥ 2',
         'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
         'S3': 'S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1',
-        'S4': 'S4(p, q) p ≥ 1, q ≥ 1'
+        'S4': 'S4(p, q) p ≥ 1, q ≥ 1',
+        'PreviousResult': '← Use Previous Result'
       };
 
       const TRANSFORMATION_OPTIONS = {
@@ -268,9 +277,11 @@
       }
 
       function generateSelectHTML(graph_num) {
-        const options = GRAPH_OPTIONS[graph_num].map(type =>
-          `<option value="${type}">${GRAPH_LABELS[type]}</option>`
-        ).join('');
+        const options = GRAPH_OPTIONS[graph_num].map(type => {
+          // Disable PreviousResult option initially until there's a result
+          const disabled = (type === 'PreviousResult' && previousResult === null) ? ' disabled' : '';
+          return `<option value="${type}"${disabled}>${GRAPH_LABELS[type]}</option>`;
+        }).join('');
 
         return `
           <select id="graph-type-${graph_num}" name="graph-type-${graph_num}" onchange="showInputs(${graph_num})">
@@ -485,10 +496,20 @@
         const result = compose(g, h);
         console.log("Result: ", result);
 
+        // Store result globally for potential reuse
+        previousResult = result;
+
         // Display result in the text field
         const resultTextarea = document.getElementById('composition-result');
         resultTextarea.value = formatResult(result);
-      }
+
+        // Enable the PreviousResult option in dropdown 1
+        const dropdown1 = document.getElementById('graph-type-1');
+        const previousResultOption = dropdown1.querySelector('option[value="PreviousResult"]');
+        if (previousResultOption) {
+          previousResultOption.disabled = false;
+        }
+              }
 
       function getDegreeSequence(type, graph_num) {
         const params = getParameterValues(graph_num);
