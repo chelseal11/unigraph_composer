@@ -664,15 +664,9 @@
       function combinedGraphs(g, h) {
         // if they both have A, then we need to combine them
         if (g.A !== undefined && h.A !== undefined) {
-          return {
-            A: combineGraphs([g.A, h.A]),
-            B: combineGraphs([g.B, h.B])
-          }
+          return combineGraphs([g.A, h.A, g.B, h.B]);
         } else {
-          return {
-            A: h.A,
-            B: combineGraphs([g, h.B])
-          }
+          return combineGraphs([g, h.A, h.B]);
         }
       }
 
@@ -703,26 +697,18 @@
         return combinedGraphs(composedG, composedH);
       }
 
-      function formatHashmap(hashmap) {
-        if (hashmap === undefined) {
+      function formatResult(result) {
+        if (result === undefined) {
           return "";
         }
         let resultString = "";
-        const numKeys = Object?.keys(hashmap)?.length;
-        Object?.keys(hashmap)?.sort((a, b) => b - a).forEach((key, index) => {
-          resultString += `${key}^${hashmap[key]} `;
+        const numKeys = Object?.keys(result)?.length;
+        Object?.keys(result)?.sort((a, b) => b - a).forEach((key, index) => {
+          resultString += `${key}^${result[key]} `;
           if (index !== numKeys - 1) {
             resultString += ", ";
           }
         });
-        return resultString;
-      }
-
-      function formatResult(result) {
-        let resultString = "";
-        resultString += formatHashmap(result.A);
-        resultString += "; ";
-        resultString += formatHashmap(result.B);
         return resultString;
       }
 
