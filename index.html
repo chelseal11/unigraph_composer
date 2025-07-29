@@ -162,8 +162,8 @@
         const sizeOfG = calculateSizeOfGraph(g);
         if (g.A !== undefined) {
           return {
-            A: complementSequence(g.A, calculateSizeOfGraph(g)),
-            B: complementSequence(g.B, calculateSizeOfGraph(g))
+            A: complementSequence(g.B, calculateSizeOfGraph(g)),
+            B: complementSequence(g.A, calculateSizeOfGraph(g))
           };
         } else {
           return complementSequence(g, calculateSizeOfGraph(g));
