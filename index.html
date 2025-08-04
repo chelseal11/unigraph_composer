@@ -18,6 +18,7 @@
         border: 1px solid #ddd;
         border-radius: 5px;
         background-color: #ffffff;
+        width: 470px;
       }
       .graph-section h3 {
         margin-top: 0;
@@ -35,11 +36,11 @@
       <!-- Dynamic HTML will be generated here -->
     </div>
 
-    <button style="width: 200px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
+    <button style="width: 500px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
 
-    <div id="result-container" style="margin-top: 20px;">
-      <textarea id="composition-result" readonly style="width: 40%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Click 'Compute Composition' to see the result here..."></textarea>
-    </div>
+          <div id="result-container" style="margin-top: 20px;">
+        <div id="composition-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
+      </div>
 
     <script>
       // Global variable to store the previous composition result
@@ -344,7 +345,7 @@
               </div>
               <div style="margin-top: 15px;">
                 <label for="graph-${graph_num}-sequence">Graph ${graph_num} Degree Sequence:</label><br>
-                <textarea id="graph-${graph_num}-sequence" readonly style="width: 40%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Configure graph parameters to see degree sequence..."></textarea>
+                <div id="graph-${graph_num}-sequence" style="width: 440px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px; color: #666;" data-placeholder="Configure graph parameters to see degree sequence..."></div>
               </div>
             </div>
           </div>
@@ -360,6 +361,15 @@
 
         showInputs(1);
         showInputs(2);
+
+        // Initialize display divs with placeholder text
+        const resultDiv = document.getElementById('composition-result');
+        const graph1Div = document.getElementById('graph-1-sequence');
+        const graph2Div = document.getElementById('graph-2-sequence');
+
+        setDisplayContent(resultDiv, "");
+        setDisplayContent(graph1Div, "");
+        setDisplayContent(graph2Div, "");
 
         // Update degree sequence displays
         updateDegreeSequenceDisplay(1);
@@ -437,7 +447,7 @@
 
           if (previousResultDisplay && previousResult) {
             previousResultDisplay.classList.remove('hidden');
-            previousResultText.textContent = formatResult(previousResult);
+            setDisplayContent(previousResultText, formatResult(previousResult));
           }
         } else {
           // Show required inputs based on configuration
@@ -452,9 +462,9 @@
         updateDegreeSequenceDisplay(graph_num);
       }
 
-      function updateDegreeSequenceDisplay(graph_num) {
-        const textarea = document.getElementById(`graph-${graph_num}-sequence`);
-        if (!textarea) return;
+            function updateDegreeSequenceDisplay(graph_num) {
+        const displayDiv = document.getElementById(`graph-${graph_num}-sequence`);
+        if (!displayDiv) return;
 
         try {
           const graphType = document.getElementById(`graph-type-${graph_num}`).value;
@@ -467,16 +477,26 @@
             // Apply transformation
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
-              textarea.value = formatResult(degreeSequence);
+              setDisplayContent(displayDiv, formatResult(degreeSequence));
             } else {
-              textarea.value = "";
+              setDisplayContent(displayDiv, "");
             }
           } else {
-            textarea.value = "";
+            setDisplayContent(displayDiv, "");
           }
         } catch (error) {
           // If there's an error (incomplete configuration), show placeholder
-          textarea.value = "";
+          setDisplayContent(displayDiv, "");
+        }
+      }
+
+      function setDisplayContent(element, content) {
+        if (content && content.trim() !== "") {
+          element.textContent = content;
+          element.style.color = "#000";
+        } else {
+          element.textContent = element.dataset.placeholder || "";
+          element.style.color = "#999";
         }
       }
 
@@ -580,9 +600,9 @@
         const result = compose(g, h);
         previousResult = result;
 
-        // Display result in the text field
-        const resultTextarea = document.getElementById('composition-result');
-        resultTextarea.value = formatResult(result);
+        // Display result in the result div
+        const resultDiv = document.getElementById('composition-result');
+        setDisplayContent(resultDiv, formatResult(result));
 
         // Enable the PreviousResult option in dropdown 1 and update its label
         const dropdown1 = document.getElementById('graph-type-1');
@@ -592,16 +612,16 @@
           previousResultOption.textContent = 'Previous Result: ' + formatResult(previousResult);
         }
 
-        // Update any visible previous result displays
-        for (let i = 1; i <= 2; i++) {
-          const dropdown = document.getElementById(`graph-type-${i}`);
-          if (dropdown && dropdown.value === 'PreviousResult') {
-            const previousResultText = document.getElementById(`previous-result-text-${i}`);
-            if (previousResultText) {
-              previousResultText.textContent = formatResult(previousResult);
+                  // Update any visible previous result displays
+          for (let i = 1; i <= 2; i++) {
+            const dropdown = document.getElementById(`graph-type-${i}`);
+            if (dropdown && dropdown.value === 'PreviousResult') {
+              const previousResultText = document.getElementById(`previous-result-text-${i}`);
+              if (previousResultText) {
+                setDisplayContent(previousResultText, formatResult(previousResult));
+              }
             }
           }
-        }
               }
 
       function getDegreeSequence(type, params, graph_num) {
