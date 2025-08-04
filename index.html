@@ -7,29 +7,38 @@
         display: none;
       }
       .static_height {
-        height: 300px;
+        min-height: 150px;
       }
       .dropdown-container {
-        display: flex;
-        gap: 20px;
+        display: block;
       }
-      .dropdown-container .static_height {
-        flex: 1;
+      .graph-section {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #ffffff;
+      }
+      .graph-section h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 1.1em;
       }
     </style>
   </head>
   <body>
-    <label for="graph-type">Choose two indecomposable components:</label>
+    <h2>Unigraph Composition Tool</h2>
+    <p>Configure two graphs below and compute their composition:</p>
 
     <div class="dropdown-container">
       <!-- Dynamic HTML will be generated here -->
     </div>
 
-    <button onclick="computeComposition()">Compute Composition</button>
+    <button style="width: 200px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
 
     <div id="result-container" style="margin-top: 20px;">
-      <label for="composition-result">Composition Result:</label>
-      <textarea id="composition-result" readonly style="width: 90%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Click 'Compute Composition' to see the result here..."></textarea>
+      <textarea id="composition-result" readonly style="width: 40%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Click 'Compute Composition' to see the result here..."></textarea>
     </div>
 
     <script>
@@ -254,7 +263,7 @@
           return `
             <div id="input-${inputType}-${graph_num}" class="hidden">
               <label for="${inputType}">${inputLabels[inputType]}</label>
-              <select id="${inputType}-${graph_num}" name="${inputType}">
+              <select id="${inputType}-${graph_num}" name="${inputType}" onchange="updateDegreeSequenceDisplay(${graph_num})">
                 <option value="A">Partition A</option>
                 <option value="B">Partition B</option>
               </select>
@@ -266,7 +275,7 @@
           'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
         };
 
-        const onchange = inputType === 'm' ? ` onchange="showInputsS2(${graph_num})"` : '';
+        const onchange = inputType === 'm' ? ` onchange="showInputsS2(${graph_num}); updateDegreeSequenceDisplay(${graph_num})"` : ` oninput="updateDegreeSequenceDisplay(${graph_num})"`;
 
         return `
           <div id="input-${inputType}-${graph_num}" class="hidden">
@@ -305,7 +314,7 @@
         return `
           <div style="margin-top: 10px;">
             <label for="transformation-${graph_num}">Transformation:</label>
-            <select id="transformation-${graph_num}" name="transformation-${graph_num}">
+            <select id="transformation-${graph_num}" name="transformation-${graph_num}" onchange="updateDegreeSequenceDisplay(${graph_num})">
               ${options}
             </select>
           </div>
@@ -317,15 +326,26 @@
         const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
 
         return `
-          <div class="static_height">
-            ${generateSelectHTML(graph_num)}
-            ${generateTransformationHTML(graph_num)}
-            ${inputsHTML}
-            <div id="dynamic-p-inputs-${graph_num}" class="hidden">
-              <!-- Dynamic p1 through pm inputs will be created here -->
-            </div>
-            <div id="dynamic-q-inputs-${graph_num}" class="hidden">
-              <!-- Dynamic q1 through qm inputs will be created here -->
+          <div class="graph-section">
+            <h3>Graph ${graph_num}</h3>
+            <div class="static_height">
+              ${generateSelectHTML(graph_num)}
+              ${generateTransformationHTML(graph_num)}
+              ${inputsHTML}
+              <div id="dynamic-p-inputs-${graph_num}" class="hidden">
+                <!-- Dynamic p1 through pm inputs will be created here -->
+              </div>
+              <div id="dynamic-q-inputs-${graph_num}" class="hidden">
+                <!-- Dynamic q1 through qm inputs will be created here -->
+              </div>
+              <div id="previous-result-display-${graph_num}" class="hidden" style="margin-top: 10px; padding: 8px; background-color: #e8f4fd; border: 1px solid #bee5eb; border-radius: 4px;">
+                <strong>Using Previous Result:</strong>
+                <div id="previous-result-text-${graph_num}" style="font-family: monospace; margin-top: 5px;"></div>
+              </div>
+              <div style="margin-top: 15px;">
+                <label for="graph-${graph_num}-sequence">Graph ${graph_num} Degree Sequence:</label><br>
+                <textarea id="graph-${graph_num}-sequence" readonly style="width: 40%; height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px;" placeholder="Configure graph parameters to see degree sequence..."></textarea>
+              </div>
             </div>
           </div>
         `;
@@ -340,6 +360,10 @@
 
         showInputs(1);
         showInputs(2);
+
+        // Update degree sequence displays
+        updateDegreeSequenceDisplay(1);
+        updateDegreeSequenceDisplay(2);
       }
 
       function hideAndClearInput(element, inputId) {
@@ -366,6 +390,7 @@
 
         const dynamicP = document.getElementById(`dynamic-p-inputs-${graph_num}`);
         const dynamicQ = document.getElementById(`dynamic-q-inputs-${graph_num}`);
+        const previousResultDisplay = document.getElementById(`previous-result-display-${graph_num}`);
 
         if (dynamicP) {
           dynamicP.classList.add('hidden');
@@ -375,6 +400,10 @@
         if (dynamicQ) {
           dynamicQ.classList.add('hidden');
           dynamicQ.innerHTML = "";
+        }
+
+        if (previousResultDisplay) {
+          previousResultDisplay.classList.add('hidden');
         }
       }
 
@@ -401,11 +430,53 @@
         // Hide all inputs first
         hideAllInputs(graph_num);
 
-        // Show required inputs based on configuration
-        if (config && config.inputs) {
-          config.inputs.forEach(inputType => {
-            showInputElement(inputType, graph_num);
-          });
+        // Special handling for Previous Result
+        if (selection === 'PreviousResult') {
+          const previousResultDisplay = document.getElementById(`previous-result-display-${graph_num}`);
+          const previousResultText = document.getElementById(`previous-result-text-${graph_num}`);
+
+          if (previousResultDisplay && previousResult) {
+            previousResultDisplay.classList.remove('hidden');
+            previousResultText.textContent = formatResult(previousResult);
+          }
+        } else {
+          // Show required inputs based on configuration
+          if (config && config.inputs) {
+            config.inputs.forEach(inputType => {
+              showInputElement(inputType, graph_num);
+            });
+          }
+        }
+
+        // Update degree sequence display
+        updateDegreeSequenceDisplay(graph_num);
+      }
+
+      function updateDegreeSequenceDisplay(graph_num) {
+        const textarea = document.getElementById(`graph-${graph_num}-sequence`);
+        if (!textarea) return;
+
+        try {
+          const graphType = document.getElementById(`graph-type-${graph_num}`).value;
+          const transformationType = document.getElementById(`transformation-${graph_num}`).value;
+
+          // Get parameter values for the new signature
+          const params = getParameterValues(graph_num);
+          let degreeSequence = getDegreeSequence(graphType, params, graph_num);
+          if (degreeSequence) {
+            // Apply transformation
+            degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
+            if (degreeSequence) {
+              textarea.value = formatResult(degreeSequence);
+            } else {
+              textarea.value = "";
+            }
+          } else {
+            textarea.value = "";
+          }
+        } catch (error) {
+          // If there's an error (incomplete configuration), show placeholder
+          textarea.value = "";
         }
       }
 
@@ -437,7 +508,7 @@
             const inputDiv = document.createElement('div');
             inputDiv.innerHTML = `
               <label for="s2-p${i}-${graph_num}">Enter p${i}:</label>
-              <input type="number" id="s2-p${i}-${graph_num}" name="p${i}" min="1">
+              <input type="number" id="s2-p${i}-${graph_num}" name="p${i}" min="1" oninput="updateDegreeSequenceDisplay(${graph_num})">
             `;
             DYNAMIC_P.appendChild(inputDiv);
           }
@@ -447,7 +518,7 @@
             const inputDiv = document.createElement('div');
             inputDiv.innerHTML = `
               <label for="s2-q${i}-${graph_num}">Enter q${i}:</label>
-              <input type="number" id="s2-q${i}-${graph_num}" name="q${i}" min="1">
+              <input type="number" id="s2-q${i}-${graph_num}" name="q${i}" min="1" oninput="updateDegreeSequenceDisplay(${graph_num})">
             `;
             DYNAMIC_Q.appendChild(inputDiv);
           }
@@ -484,8 +555,14 @@
 
         alert(`Composing: ${TRANSFORMATION_OPTIONS[t1]} ${g1} and ${TRANSFORMATION_OPTIONS[t2]} ${g2}`);
 
-        let g = getDegreeSequence(g1, 1);
-        let h = getDegreeSequence(g2, 2);
+        const params1 = getParameterValues(1);
+        const params2 = getParameterValues(2);
+        if (!checkValidity(g1, params1, 1) || !checkValidity(g2, params2, 2)) {
+          return; // Don't proceed if validation failed
+        }
+
+        let g = getDegreeSequence(g1, params1, 1);
+        let h = getDegreeSequence(g2, params2, 2);
 
         // Check if validation failed for either graph
         if (g === null || h === null) {
@@ -501,9 +578,6 @@
         }
 
         const result = compose(g, h);
-        console.log("Result: ", result);
-
-        // Store result globally for potential reuse
         previousResult = result;
 
         // Display result in the text field
@@ -517,10 +591,20 @@
           previousResultOption.disabled = false;
           previousResultOption.textContent = 'Previous Result: ' + formatResult(previousResult);
         }
+
+        // Update any visible previous result displays
+        for (let i = 1; i <= 2; i++) {
+          const dropdown = document.getElementById(`graph-type-${i}`);
+          if (dropdown && dropdown.value === 'PreviousResult') {
+            const previousResultText = document.getElementById(`previous-result-text-${i}`);
+            if (previousResultText) {
+              previousResultText.textContent = formatResult(previousResult);
+            }
+          }
+        }
               }
 
-      function getDegreeSequence(type, graph_num) {
-        const params = getParameterValues(graph_num);
+      function getDegreeSequence(type, params, graph_num) {
         const { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 } = params;
 
         // For S2, collect dynamic pi and qi values and calculate n
@@ -544,10 +628,6 @@
           params.n = n;
         }
 
-        if (!checkValidity(type, M, L, P, Q, Q1, Q2, graph_num)) {
-          return null; // Return null if validation fails
-        }
-
         const config = GRAPH_CONFIG[type];
         if (!config) {
           alert("Unknown graph type: " + type);
@@ -557,7 +637,8 @@
         return config.degSequence(params);
       }
 
-      function checkValidity(type, M, L, P, Q, Q1, Q2, graph_num) {
+      function checkValidity(type, params, graph_num) {
+        const { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 } = params;
         const config = GRAPH_CONFIG[type];
         if (!config) {
           alert("Unknown graph type: " + type);
@@ -703,30 +784,43 @@
       }
 
       function compose(g, h) {
-        console.log("g: ", g);
-        console.log("h: ", h);
         const composedG = composeG(g, h);
         const composedH = composeH(g, h);
 
-        console.log("composedG: ", composedG);
-        console.log("composedH: ", composedH);
-
         return combinedGraphs(composedG, composedH);
+      }
+
+      function formatHashmap(hashmap) {
+        if (hashmap === undefined) {
+          return "";
+        }
+        let resultString = "";
+        const numKeys = Object?.keys(hashmap)?.length;
+        Object?.keys(hashmap)?.sort((a, b) => b - a).forEach((key, index) => {
+          resultString += `${key}^${hashmap[key]} `;
+          if (index !== numKeys - 1) {
+            resultString += ", ";
+          }
+        });
+        return resultString;
       }
 
       function formatResult(result) {
         if (result === undefined) {
           return "";
         }
-        let resultString = "";
-        const numKeys = Object?.keys(result)?.length;
-        Object?.keys(result)?.sort((a, b) => b - a).forEach((key, index) => {
-          resultString += `${key}^${result[key]} `;
-          if (index !== numKeys - 1) {
-            resultString += ", ";
-          }
-        });
-        return resultString;
+
+        // Handle split graphs (with A and B partitions)
+        if (result.A !== undefined || result.B !== undefined) {
+          let resultString = "";
+          resultString += formatHashmap(result.A);
+          resultString += "; ";
+          resultString += formatHashmap(result.B);
+          return resultString;
+        } else {
+          // Handle simple degree sequences
+          return formatHashmap(result);
+        }
       }
 
       // Initialize the HTML when the page loads
