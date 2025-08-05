@@ -1,8 +1,15 @@
 # Unigraph Composition Tool
 
-A web-based tool for computing compositions of indecomposable unigraphs and their degree sequences. This tool allows researchers and students to explore graph theory concepts by creating an indefinite number of unique unigraphs, as previous composition results can be iteratively composed with other graphs to generate new structures.
+<Intro on unigraphs>
+<something about Tyshkevich's theorem>
+<her wiki page: https://en.wikipedia.org/wiki/Regina_Tyshkevich>
+terminologies are based on <link to her paper>
+<link to her paper>
+
+A web-based tool for computing compositions of indecomposable unigraphs through their degree sequences. This tool allows researchers and students to explore related to unigraphs by creating an unlimited number of unigraphs, as previous composition results can be iteratively composed with other graphs to generate new structures.
 
 ## Table of Contents
+- [Mathematical Background](#mathematical-background)
 - [Features](#features)
 - [Supported Graph Types](#supported-graph-types)
 - [Available Versions of a Unigraph](#available-versions-of-a-unigraph)
@@ -10,12 +17,18 @@ A web-based tool for computing compositions of indecomposable unigraphs and thei
 - [Examples](#examples)
 - [Technical Details](#technical-details)
 - [Installation](#installation)
-- [Mathematical Background](#mathematical-background)
 - [Use Cases](#use-cases)
 - [Contributing](#contributing)
 - [License](#license)
 - [Citation](#citation)
 - [Support](#support)
+
+## Mathematical Background
+
+This tool is designed for research in graph theory, specifically:
+- **Graph Composition**: Adding edges between every vertex in Graph 1 and partition A in Graph 2.
+- **Inverse**: A version of the graph where all of the vertices in partiion B are adjacent so that B becomes the new complete graph A and all of the vertices in partition A have their edges removed so that they become stable set B.
+- **Complement**: A version of the graph where all edges are reversed so that if an edge wasn't present in the standard version, it exists in the complement, and vice versa.
 
 ## Features
 
@@ -130,14 +143,6 @@ The tool implements unigraph composition by:
 - Works in all modern browsers (Chrome, Firefox, Safari, Edge)
 - Requires JavaScript to be enabled
 - No server-side components needed
-
-## Mathematical Background
-
-This tool is designed for research in graph theory, specifically:
-- **Unigraphs**: Graphs with only 1 possible isomorphism for their degree sequence.
-- **Graph Composition**: Adding edges between every vertex in Graph 1 and partition A in Graph 2.
-- **Inverse**: A version of the graph where all of the vertices in partiion B are adjacent so that B becomes the new complete graph A and all of the vertices in partition A have their edges removed so that they become stable set B.
-- **Complement**: A version of the graph where all edges are reversed so that if an edge wasn't present in the standard version, it exists in the complement, and vice versa.
 
 ## Use Cases
 
