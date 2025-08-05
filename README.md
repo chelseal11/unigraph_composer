@@ -4,7 +4,6 @@ A web-based tool for computing compositions of indecomposable unigraphs and thei
 
 ## Table of Contents
 - [Features](#features)
-- [Live Demo](#live-demo)
 - [Supported Graph Types](#supported-graph-types)
 - [Available Versions of a Unigraph](#available-versions-of-a-unigraph)
 - [How to Use](#how-to-use)
@@ -17,9 +16,6 @@ A web-based tool for computing compositions of indecomposable unigraphs and thei
 - [License](#license)
 - [Citation](#citation)
 - [Support](#support)
-
-## Live Demo
-🌐 **Try it now:** [https://chelseal11.github.io/unigraph_composer/](https://chelseal11.github.io/unigraph_composer/)
 
 ## Features
 
