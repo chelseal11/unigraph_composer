@@ -18,10 +18,6 @@ A web-based tool for computing compositions of indecomposable unigraphs through 
 - [Technical Details](#technical-details)
 - [Installation](#installation)
 - [Use Cases](#use-cases)
-- [Contributing](#contributing)
-- [License](#license)
-- [Citation](#citation)
-- [Support](#support)
 
 ## Mathematical Background
 
