@@ -1,12 +1,10 @@
 # Unigraph Composition Tool
 
-<Intro on unigraphs>
-<something about Tyshkevich's theorem>
-<her wiki page: https://en.wikipedia.org/wiki/Regina_Tyshkevich>
-terminologies are based on <link to her paper>
-<link to her paper>
+Unigraphs are graphs uniquely determined by their degree sequences—that is, no two non-isomorphic graphs share the same sequence of vertex degrees. They sit at the intersection of graph theory and combinatorics, and have been studied for their structural properties and applications in recognition algorithms.
 
-A web-based tool for computing compositions of indecomposable unigraphs through their degree sequences. This tool allows researchers and students to explore related to unigraphs by creating an unlimited number of unigraphs, as previous composition results can be iteratively composed with other graphs to generate new structures.
+A key result in the study of unigraphs is Tyshkevich’s theorem on graph composition, developed by the Belarusian mathematician Regina Tyshkevich. Her work established a systematic method for decomposing graphs into indecomposable components, which in turn allows us to describe and construct unigraphs from simpler building blocks. Much of the terminology in this tool is drawn directly from [her original paper](https://dl.acm.org/doi/10.1016/S0012-365X(99)00381-7) on graph decompositions and compositions.
+
+For additional background, see [Dr. Cheng’s paper](https://arxiv.org/pdf/2308.03434), which builds on Tyshkevich’s framework and provides modern formulations of unigraph composition.
 
 ## Table of Contents
 - [Mathematical Background](#mathematical-background)
