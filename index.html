@@ -29,18 +29,31 @@
     </style>
   </head>
   <body>
-    <h2>Unigraph Composition Tool</h2>
-    <p>Configure two graphs below and compute their composition:</p>
-
-    <div class="dropdown-container">
-      <!-- Dynamic HTML will be generated here -->
+    <div id="start-screen">
+      <h2>Welcome to Unigraph Composer</h2>
+      <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
+      <button onclick="showRandomUnigraphComposer()">Random Unigraph Composer</button>
     </div>
 
-    <button style="width: 500px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
+    <div id="compose-unigraphs" class="hidden">
+      <h2>Unigraph Composition Tool</h2>
+      <p>Configure two graphs below and compute their composition:</p>
 
-          <div id="result-container" style="margin-top: 20px;">
+      <div class="dropdown-container">
+        <!-- Dynamic HTML will be generated here -->
+      </div>
+
+      <button style="width: 500px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
+
+      <div id="result-container" style="margin-top: 20px;">
         <div id="composition-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
       </div>
+    </div>
+
+    <div id="random-unigraph-composer" class="hidden">
+      <h2>Random Unigraph Composer</h2>
+      <p>This feature is under development.</p>
+    </div>
 
     <script>
       // Global variable to store the previous composition result
@@ -841,6 +854,16 @@
           // Handle simple degree sequences
           return formatHashmap(result);
         }
+      }
+
+      function showComposeUnigraphs() {
+        document.getElementById('compose-unigraphs').classList.remove('hidden');
+        document.getElementById('random-unigraph-composer').classList.add('hidden');
+      }
+
+      function showRandomUnigraphComposer() {
+        document.getElementById('random-unigraph-composer').classList.remove('hidden');
+        document.getElementById('compose-unigraphs').classList.add('hidden');
       }
 
       // Initialize the HTML when the page loads
