@@ -52,7 +52,15 @@
 
     <div id="random-unigraph-composer" class="hidden">
       <h2>Random Unigraph Composer</h2>
-      <p>This feature is under development.</p>
+      <label for="num-vertices">Number of vertices (1-20):</label>
+      <input type="number" id="num-vertices" name="num-vertices" min="1" max="20" value="1">
+      <br>
+      <br>
+      <label for="num-graphs">Number of graphs (1-3):</label>
+      <input type="number" id="num-graphs" name="num-graphs" min="1" max="3" value="1">
+      <br>
+      <br>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="computeRandomUnigraph()">Compute Random Unigraph</button>
     </div>
 
     <script>
@@ -64,12 +72,18 @@
         'C5': {
           inputs: [],
           validation: [],
-          degSequence: () => ({2: 5})
+          degSequence: () => ({2: 5}),
+          potentialVertices: [5],
+          potentialParamsByNumVertices: (numVertices) => ([{}])
         },
         'mK2': {
           inputs: ['m'],
           validation: [{ param: 'm', min: 2, name: 'mK₂' }],
-          degSequence: ({m}) => ({1: 2 * m})
+          degSequence: ({m}) => ({1: 2 * m}),
+          potentialVertices: [2,4,6,8,10,12,14,16,18,20],
+          potentialParamsByNumVertices: (numVertices) => (
+            [{m: numVertices / 2}]
+          )
         },
         'U2ml': {
           inputs: ['m', 'l'],
@@ -80,7 +94,21 @@
           degSequence: ({m, l}) => ({
             [l]: 1,
             1: (2 * m) + l
-          })
+          }),
+          potentialVertices: [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+          potentialParamsByNumVertices: (numVertices) => {
+            const result = [];
+            let m = 1;
+            let l = numVertices - 3;
+
+            while (l > 0) {
+              result.push({ m, l });
+              m += 1;
+              l -= 2;
+            }
+
+            return result;
+          }
         },
         'U3m': {
           inputs: ['m'],
@@ -88,9 +116,14 @@
           degSequence: ({m}) => ({
             [(2 * m) + 2]: 1,
             2: (2 * m) + 3
-          })
+          }),
+          potentialVertices: [6,8,10,12,14,16,18,20],
+          potentialParamsByNumVertices: (numVertices) => {
+            return [{m: (numVertices - 4) / 2}];
+          }
         },
         'SVG': {
+          split: true,
           inputs: ['partition'],
           validation: [],
           degSequence: ({partition}) => {
@@ -105,9 +138,12 @@
                 B: {0: 1}
               };
             }
-          }
+          },
+          potentialVertices: [1],
+          potentialParamsByNumVertices: (numVertices) => ([{}])
         },
         'Spq': {
+          split: true,
           inputs: ['p', 'q'],
           validation: [
             { param: 'p', min: 1, name: 'S(p, q)' },
@@ -116,9 +152,24 @@
           degSequence: ({p, q}) => ({
             A: {[p + q - 1]: q},
             B: {1: p * q}
-          })
+          }),
+          potentialVertices: [6,8,10,12,14,15,16,18,20],
+          potentialParamsByNumVertices: (numVertices) => {
+            let results = [];
+            if (numVertices % 2 === 0 && numVertices >= 6) {
+              results.push({ p: (numVertices - 4) / 2, q: 2 });
+            }
+            if (numVertices % 3 === 0 && numVertices >= 12) {
+              results.push({ p: (numVertices - 9) / 3, q: 3 });
+            }
+            if (numVertices % 4 === 0 && numVertices >= 20) {
+              results.push({ p: (numVertices - 16) / 4, q: 4 });
+            }
+            return results;
+          }
         },
         'S2': {
+          split: true,
           inputs: ['m'],
           validation: [{ param: 'm', min: 2, name: 'S2' }],
           dynamic: true,
@@ -143,9 +194,12 @@
               A: A,
               B: B
             };
-          }
+          },
+          potentialVertices: [],
+          potentialParamsByNumVertices: (numVertices) => ([{}])
         },
         'S3': {
+          split: true,
           inputs: ['p', 'q1', 'q2'],
           validation: [
             { param: 'p', min: 1, name: 'S3(p, q1, q2)' },
@@ -158,9 +212,39 @@
               [q1]: 1,
               1: (p * q1) + ((p + 1) * q2)
             }
-          })
+          }),
+          potentialVertices: [8,10,11,12,13,14,15,16,17,18,19,20],
+          potentialParamsByNumVertices: (numVertices) => {
+            switch (numVertices) {
+              case 8:
+                return [{ p: 1, q1: 2, q2: 1 }];
+              case 10:
+                return [{ p: 1, q1: 3, q2: 1 }];
+              case 11:
+                return [{ p: 1, q1: 2, q2: 2 }];
+              case 12:
+                return [{ p: 1, q1: 4, q2: 1 }];
+              case 13:
+                return [{ p: 1, q1: 3, q2: 2 }];
+              case 14:
+                return [{ p: 1, q1: 2, q2: 3 }];
+              case 15:
+                return [{ p: 1, q1: 4, q2: 2 }];
+              case 16:
+                return [{ p: 1, q1: 3, q2: 3 }];
+              case 17:
+                return [{ p: 1, q1: 2, q2: 4 }];
+              case 18:
+                return [{ p: 1, q1: 4, q2: 3 }];
+              case 19:
+                return [{ p: 1, q1: 3, q2: 4 }];
+              case 20:
+                return [{ p: 1, q1: 2, q2: 5 }] ;
+            }
+          }
         },
         'S4': {
+          split: true,
           inputs: ['p', 'q'],
           validation: [
             { param: 'p', min: 1, name: 'S4(p, q)' },
@@ -172,7 +256,21 @@
               [p + q + 3]: q + 2
             },
             B: {2: (q * p) + (2 * p) + q + 1}
-          })
+          }),
+          potentialVertices: [9,12,15,16,18,20],
+          potentialParamsByNumVertices: (numVertices) => {
+            let results = [];
+            if (numVertices % 3 === 0) {
+              results.push({ p: 1, q: (numVertices / 3) - 2 });
+            }
+            if (numVertices % 4 === 0) {
+              results.push({ p: 2, q: (numVertices / 4) - 2 });
+            }
+            if (numVertices % 5 === 0) {
+              results.push({ p: 3, q: (numVertices / 5) - 2 });
+            }
+            return results;
+          }
         },
         'PreviousResult': {
           inputs: [],
@@ -475,7 +573,7 @@
         updateDegreeSequenceDisplay(graph_num);
       }
 
-            function updateDegreeSequenceDisplay(graph_num) {
+      function updateDegreeSequenceDisplay(graph_num) {
         const displayDiv = document.getElementById(`graph-${graph_num}-sequence`);
         if (!displayDiv) return;
 
@@ -590,6 +688,8 @@
 
         const params1 = getParameterValues(1);
         const params2 = getParameterValues(2);
+        console.log("params1", params1);
+        console.log("params2", params2);
         if (!checkValidity(g1, params1, 1) || !checkValidity(g2, params2, 2)) {
           return; // Don't proceed if validation failed
         }
@@ -864,6 +964,65 @@
       function showRandomUnigraphComposer() {
         document.getElementById('random-unigraph-composer').classList.remove('hidden');
         document.getElementById('compose-unigraphs').classList.add('hidden');
+      }
+
+      function computeRandomUnigraph() {
+        const numVertices = document.getElementById('num-vertices').value;
+        const numGraphs = document.getElementById('num-graphs').value;
+        const vertice_partitions = partitionVertices(numVertices, numGraphs);
+        console.log("vertice_partitions", vertice_partitions);
+        const graphs = [];
+        for (let i = 0; i < vertice_partitions.length; i++) {
+          const partitionNumVertices = i === 0 ? vertice_partitions[i] : vertice_partitions[i] - vertice_partitions[i - 1];
+          console.log("partitionNumVertices", partitionNumVertices);
+          const randomUnigraph = i === 0 ? generateRandomUnigraph(partitionNumVertices, false) : generateRandomUnigraph(partitionNumVertices);
+          console.log("randomUnigraph", randomUnigraph);
+          graphs.push(randomUnigraph);
+        }
+      }
+
+      function partitionVertices(numVertices, numGraphs) {
+        const numPartitions = numGraphs - 1;
+        const range = numVertices - 1;
+        const partitions = [];
+        while (partitions.length < numPartitions) {
+          const partition = Math.floor(Math.random() * range) + 1;
+          if (!partitions.includes(partition)) {
+            partitions.push(partition);
+          }
+        }
+        partitions.push(numVertices);
+        return partitions.sort((a, b) => a - b);
+      }
+
+      function generateRandomUnigraph(numVertices, split = true) {
+        let graph = {};
+        const potentialGraphTypes = calculatePotentialGraphs(numVertices, split);
+        console.log("potentialGraphTypes", potentialGraphTypes)
+        const graphType = potentialGraphTypes[Math.floor(Math.random() * potentialGraphTypes.length)];
+        if (graphType === undefined) {
+          return null;
+        }
+        console.log("graphType", graphType);
+        const potentialParams = GRAPH_CONFIG[graphType].potentialParamsByNumVertices(numVertices);
+        console.log("potentialParams", potentialParams);
+        const params = potentialParams[Math.floor(Math.random() * potentialParams.length)];
+        console.log("params", params);
+        graph = GRAPH_CONFIG[graphType].degSequence(params);
+        return graph;
+      }
+
+      function calculatePotentialGraphs(numVertices, split) {
+        const potentialGraphs = [];
+        for (const graphType in GRAPH_CONFIG) {
+          if (split && !GRAPH_CONFIG[graphType].split) {
+            continue;
+          }
+          if (GRAPH_CONFIG[graphType]?.potentialVertices?.includes(numVertices)) {
+            potentialGraphs.push(graphType);
+          }
+        }
+        return potentialGraphs;
       }
 
       // Initialize the HTML when the page loads
