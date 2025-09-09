@@ -981,12 +981,13 @@
           const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
           if (resultDiv) {
             const label = `graph ${i + 1}`;
+            const numVerticesText = `number of vertices: ${partitionNumVertices}`;
             const typeText = `type: ${randomUnigraph.graphType}`;
             const paramsText = `${Object.entries(randomUnigraph.params).map(([param, value]) => {
               return `${param}: ${value}`;
             }).join(', ')}`;
             const degreeSequenceText = `degree sequence: ${formatResult(randomUnigraph.degreeSequence)}`;
-            const text = paramsText ? `${label}<br>${typeText}<br>${paramsText}<br>${degreeSequenceText}` : `${label}<br>${typeText}<br>${degreeSequenceText}`;
+            const text = paramsText ? `${label}<br>${numVerticesText}<br>${typeText}<br>${paramsText}<br>${degreeSequenceText}` : `${label}<br>${numVerticesText}<br>${typeText}<br>${degreeSequenceText}`;
             resultDiv.innerHTML = text;
           }
         }
