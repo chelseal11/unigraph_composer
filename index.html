@@ -61,6 +61,15 @@
       <br>
       <br>
       <button style="width: 250px; height: 30px; font-size: 1em;" onclick="computeRandomUnigraph()">Compute Random Unigraph</button>
+      <br>
+      <br>
+      <div id="random-unigraph-1" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <br>
+      <div id="random-unigraph-2" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <br>
+      <div id="random-unigraph-3" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <br>
+      <div id="final-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
     </div>
 
     <script>
@@ -175,10 +184,14 @@
           dynamic: true,
           degSequence: (params) => {
             // n is the sum of qi from i=1 to m, calculated in getDegreeSequence
-            const n = params.n;
             const m = params.m;
+            let n = 0;
             const A = {};
             const B = {};
+
+            for (let i = 1; i <= m; i++) {
+              n += params[`q${i}`];
+            }
 
             for (let i = 1; i <= m; i++) {
               const pi = params[`p${i}`];
@@ -195,8 +208,8 @@
               B: B
             };
           },
-          potentialVertices: [],
-          potentialParamsByNumVertices: (numVertices) => ([{}])
+          potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+          potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
         },
         'S3': {
           split: true,
@@ -215,32 +228,10 @@
           }),
           potentialVertices: [8,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => {
-            switch (numVertices) {
-              case 8:
-                return [{ p: 1, q1: 2, q2: 1 }];
-              case 10:
-                return [{ p: 1, q1: 3, q2: 1 }];
-              case 11:
-                return [{ p: 1, q1: 2, q2: 2 }];
-              case 12:
-                return [{ p: 1, q1: 4, q2: 1 }];
-              case 13:
-                return [{ p: 1, q1: 3, q2: 2 }];
-              case 14:
-                return [{ p: 1, q1: 2, q2: 3 }];
-              case 15:
-                return [{ p: 1, q1: 4, q2: 2 }];
-              case 16:
-                return [{ p: 1, q1: 3, q2: 3 }];
-              case 17:
-                return [{ p: 1, q1: 2, q2: 4 }];
-              case 18:
-                return [{ p: 1, q1: 4, q2: 3 }];
-              case 19:
-                return [{ p: 1, q1: 3, q2: 4 }];
-              case 20:
-                return [{ p: 1, q1: 2, q2: 5 }] ;
-            }
+            const p = 1;
+            const q1 = 4 - (numVertices % 3)
+            const q2 = (numVertices - 2*q1 - 1) / 3;
+            return [{ p: 1, q1: q1, q2: q2 }];
           }
         },
         'S4': {
@@ -742,7 +733,6 @@
 
         // For S2, collect dynamic pi and qi values and calculate n
         if (type === 'S2' && M) {
-          let n = 0;
           for (let i = 1; i <= M; i++) {
             // Collect pi values
             const pElement = document.getElementById(`s2-p${i}-${graph_num}`);
@@ -755,10 +745,8 @@
             if (qElement) {
               const qValue = Number(qElement.value);
               params[`q${i}`] = qValue;
-              n += qValue;
             }
           }
-          params.n = n;
         }
 
         const config = GRAPH_CONFIG[type];
@@ -916,6 +904,19 @@
         return combined;
       }
 
+      function composeGraphs(graphs) {
+        const resultDiv = document.getElementById('composition-result');
+        let finalResult;
+
+        if (graphs.length === 3) {
+          const firstComposition = compose(graphs[0], graphs[1]);
+          finalResult = compose(firstComposition, graphs[2]);
+        } else {
+          finalResult = compose(graphs[0], graphs[1]);
+        }
+        return finalResult;
+      }
+
       function compose(g, h) {
         const composedG = composeG(g, h);
         const composedH = composeH(g, h);
@@ -970,14 +971,30 @@
         const numVertices = document.getElementById('num-vertices').value;
         const numGraphs = document.getElementById('num-graphs').value;
         const vertice_partitions = partitionVertices(numVertices, numGraphs);
-        console.log("vertice_partitions", vertice_partitions);
         const graphs = [];
         for (let i = 0; i < vertice_partitions.length; i++) {
           const partitionNumVertices = i === 0 ? vertice_partitions[i] : vertice_partitions[i] - vertice_partitions[i - 1];
-          console.log("partitionNumVertices", partitionNumVertices);
           const randomUnigraph = i === 0 ? generateRandomUnigraph(partitionNumVertices, false) : generateRandomUnigraph(partitionNumVertices);
-          console.log("randomUnigraph", randomUnigraph);
-          graphs.push(randomUnigraph);
+          graphs.push(randomUnigraph.degreeSequence);
+
+          // Display each random unigraph in its respective text box
+          const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
+          if (resultDiv) {
+            const label = `graph ${i + 1}`;
+            const typeText = `type: ${randomUnigraph.graphType}`;
+            const paramsText = `${Object.entries(randomUnigraph.params).map(([param, value]) => {
+              return `${param}: ${value}`;
+            }).join(', ')}`;
+            const degreeSequenceText = `degree sequence: ${formatResult(randomUnigraph.degreeSequence)}`;
+            const text = paramsText ? `${label}<br>${typeText}<br>${paramsText}<br>${degreeSequenceText}` : `${label}<br>${typeText}<br>${degreeSequenceText}`;
+            resultDiv.innerHTML = text;
+          }
+        }
+
+        const finalResult = composeGraphs(graphs);
+        const compositionResultDiv = document.getElementById('final-result');
+        if (compositionResultDiv) {
+          compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
         }
       }
 
@@ -996,20 +1013,16 @@
       }
 
       function generateRandomUnigraph(numVertices, split = true) {
-        let graph = {};
+        let degreeSequence = {};
         const potentialGraphTypes = calculatePotentialGraphs(numVertices, split);
-        console.log("potentialGraphTypes", potentialGraphTypes)
         const graphType = potentialGraphTypes[Math.floor(Math.random() * potentialGraphTypes.length)];
         if (graphType === undefined) {
           return null;
         }
-        console.log("graphType", graphType);
         const potentialParams = GRAPH_CONFIG[graphType].potentialParamsByNumVertices(numVertices);
-        console.log("potentialParams", potentialParams);
         const params = potentialParams[Math.floor(Math.random() * potentialParams.length)];
-        console.log("params", params);
-        graph = GRAPH_CONFIG[graphType].degSequence(params);
-        return graph;
+        degreeSequence = GRAPH_CONFIG[graphType].degSequence(params);
+        return {graphType: graphType, params: params, degreeSequence: degreeSequence};
       }
 
       function calculatePotentialGraphs(numVertices, split) {
@@ -1023,6 +1036,66 @@
           }
         }
         return potentialGraphs;
+      }
+
+      function enumerateParamsForTotal(T) {
+        if (T < 2) return []; // no solutions
+
+        const results = [];
+
+        // Backtrack integer partitions of T with parts >= 2, nonincreasing
+        function gen(remaining, maxPart, parts) {
+          if (remaining === 0) {
+            results.push(parts.slice()); // one partition
+            return;
+          }
+          for (let x = Math.min(maxPart, remaining); x >= 2; x--) {
+            parts.push(x);
+            gen(remaining - x, x, parts);
+            parts.pop();
+          }
+        }
+
+        gen(T, T, []);
+
+        // Convert each partition to (m, p_i, q_i, n, A, B)
+        const solutions = results.map(parts => {
+          // Count multiplicities: r -> q
+          const counts = new Map();
+          for (const s of parts) counts.set(s, (counts.get(s) || 0) + 1);
+
+          // Distinct r_i in strict descending order; p_i = r_i - 1; q_i = multiplicity
+          const rList = Array.from(counts.keys()).sort((a, b) => b - a);
+          const m = rList.length;
+          const p = rList.map(r => r - 1);
+          const q = rList.map(r => counts.get(r));
+
+          // n = sum q_i
+          const n = q.reduce((a, b) => a + b, 0);
+
+          // Build A and B exactly as your degSequence would
+          const A = {};
+          const B = {};
+          let B1 = 0;
+          for (let i = 0; i < m; i++) {
+            const pi = p[i];
+            const qi = q[i];
+            A[pi + n - 1] = (A[pi + n - 1] || 0) + qi; // should be unique key per i
+            B1 += pi * qi;
+          }
+          B[1] = B1; // equals T - n
+
+          // Also return params in your naming convention
+          const params = { m };
+          for (let i = 0; i < m; i++) {
+            params[`p${i + 1}`] = p[i];
+            params[`q${i + 1}`] = q[i];
+          }
+
+          return params;
+        });
+
+        return solutions;
       }
 
       // Initialize the HTML when the page loads
