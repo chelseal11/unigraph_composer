@@ -32,7 +32,7 @@
     <div id="start-screen">
       <h2>Welcome to Unigraph Composer</h2>
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
-      <button onclick="showRandomUnigraphComposer()">Random Unigraph Composer</button>
+      <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
     </div>
 
     <div id="compose-unigraphs" class="hidden">
@@ -46,17 +46,18 @@
       <button style="width: 500px; height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
 
       <div id="result-container" style="margin-top: 20px;">
-        <div id="composition-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
+        <div id="composition-result-short" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
+        <div id="composition-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
       </div>
     </div>
 
-    <div id="random-unigraph-composer" class="hidden">
-      <h2>Random Unigraph Composer</h2>
+    <div id="random-unigraph-generator" class="hidden">
+      <h2>Random Unigraph Generator</h2>
       <label for="num-vertices">Number of vertices (1-20):</label>
       <input type="number" id="num-vertices" name="num-vertices" min="1" max="20" value="1">
       <br>
       <br>
-      <label for="num-graphs">Number of graphs (1-3):</label>
+      <label for="num-graphs">Number of basic components (1-3):</label>
       <input type="number" id="num-graphs" name="num-graphs" min="1" max="3" value="1">
       <br>
       <br>
@@ -69,7 +70,9 @@
       <br>
       <div id="random-unigraph-3" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
       <br>
-      <div id="final-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <div id="final-result-short" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <br>
+      <div id="final-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
     </div>
 
     <script>
@@ -107,13 +110,12 @@
           potentialVertices: [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => {
             const result = [];
-            let m = 1;
-            let l = numVertices - 3;
 
-            while (l > 0) {
-              result.push({ m, l });
-              m += 1;
-              l -= 2;
+            for (let m = 1; m <= 8; m++) {
+              const l = numVertices - (2 * m) - 1;
+              if (l >= 2) {
+                result.push({ m, l });
+              }
             }
 
             return result;
@@ -162,55 +164,55 @@
             A: {[p + q - 1]: q},
             B: {1: p * q}
           }),
-          potentialVertices: [6,8,10,12,14,15,16,18,20],
+          potentialVertices: [4,6,8,9,10,12,14,15,16,18,20],
           potentialParamsByNumVertices: (numVertices) => {
-            let results = [];
-            if (numVertices % 2 === 0 && numVertices >= 6) {
-              results.push({ p: (numVertices - 4) / 2, q: 2 });
+            const result = [];
+
+            for (let p = 1; p <= 9; p++) {
+              if (numVertices % (p + 1) === 0) {
+                const q = numVertices / (p + 1);
+                if (q >= 2) {
+                  result.push({ p, q });
+                }
+              }
             }
-            if (numVertices % 3 === 0 && numVertices >= 12) {
-              results.push({ p: (numVertices - 9) / 3, q: 3 });
-            }
-            if (numVertices % 4 === 0 && numVertices >= 20) {
-              results.push({ p: (numVertices - 16) / 4, q: 4 });
-            }
-            return results;
+            return result;
           }
         },
-        'S2': {
-          split: true,
-          inputs: ['m'],
-          validation: [{ param: 'm', min: 2, name: 'S2' }],
-          dynamic: true,
-          degSequence: (params) => {
-            // n is the sum of qi from i=1 to m, calculated in getDegreeSequence
-            const m = params.m;
-            let n = 0;
-            const A = {};
-            const B = {};
+        // 'S2': {
+        //   split: true,
+        //   inputs: ['m'],
+        //   validation: [{ param: 'm', min: 2, name: 'S2' }],
+        //   dynamic: true,
+        //   degSequence: (params) => {
+        //     // n is the sum of qi from i=1 to m, calculated in getDegreeSequence
+        //     const m = params.m;
+        //     let n = 0;
+        //     const A = {};
+        //     const B = {};
 
-            for (let i = 1; i <= m; i++) {
-              n += params[`q${i}`];
-            }
+        //     for (let i = 1; i <= m; i++) {
+        //       n += params[`q${i}`];
+        //     }
 
-            for (let i = 1; i <= m; i++) {
-              const pi = params[`p${i}`];
-              const qi = params[`q${i}`];
-              A[pi + n - 1] = qi;
-              if (B[1] === undefined) {
-                B[1] = 0;
-              }
-              B[1] += pi * qi;
-            }
+        //     for (let i = 1; i <= m; i++) {
+        //       const pi = params[`p${i}`];
+        //       const qi = params[`q${i}`];
+        //       A[pi + n - 1] = qi;
+        //       if (B[1] === undefined) {
+        //         B[1] = 0;
+        //       }
+        //       B[1] += pi * qi;
+        //     }
 
-            return {
-              A: A,
-              B: B
-            };
-          },
-          potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
-          potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
-        },
+        //     return {
+        //       A: A,
+        //       B: B
+        //     };
+        //   },
+        //   potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+        //   potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
+        // },
         'S3': {
           split: true,
           inputs: ['p', 'q1', 'q2'],
@@ -228,10 +230,20 @@
           }),
           potentialVertices: [8,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => {
-            const p = 1;
-            const q1 = 4 - (numVertices % 3)
-            const q2 = (numVertices - 2*q1 - 1) / 3;
-            return [{ p: 1, q1: q1, q2: q2 }];
+            const result = [];
+            for (let p = 1; p <= 5; p++) {
+              for (let q1 = 2; q1 <= 8; q1++) {
+                const numerator = numVertices - q1 - (p * q1) - 1;
+                const denominator = p + 2;
+                if (numerator % denominator === 0) {
+                  const q2 = numerator / denominator;
+                  if (q2 >= 1) {
+                    result.push({ p: p, q1: q1, q2: q2 });
+                  }
+                }
+              }
+            }
+            return result;
           }
         },
         'S4': {
@@ -250,15 +262,15 @@
           }),
           potentialVertices: [9,12,15,16,18,20],
           potentialParamsByNumVertices: (numVertices) => {
-            let results = [];
-            if (numVertices % 3 === 0) {
-              results.push({ p: 1, q: (numVertices / 3) - 2 });
-            }
-            if (numVertices % 4 === 0) {
-              results.push({ p: 2, q: (numVertices / 4) - 2 });
-            }
-            if (numVertices % 5 === 0) {
-              results.push({ p: 3, q: (numVertices / 5) - 2 });
+            const results = [];
+            for (let p = 1; p <= 4; p++) {
+              const denominator = p + 2;
+              if (numVertices % denominator === 0) {
+                const q = (numVertices / denominator) - 2;
+                if (q >= 1) {
+                  results.push({ p: p, q: q });
+                }
+              }
             }
             return results;
           }
@@ -465,11 +477,13 @@
         showInputs(2);
 
         // Initialize display divs with placeholder text
-        const resultDiv = document.getElementById('composition-result');
+        const resultDivShort = document.getElementById('composition-result-short');
+        const resultDivLong = document.getElementById('composition-result-long');
         const graph1Div = document.getElementById('graph-1-sequence');
         const graph2Div = document.getElementById('graph-2-sequence');
 
-        setDisplayContent(resultDiv, "");
+        setDisplayContent(resultDivShort, "");
+        setDisplayContent(resultDivLong, "");
         setDisplayContent(graph1Div, "");
         setDisplayContent(graph2Div, "");
 
@@ -705,8 +719,10 @@
         previousResult = result;
 
         // Display result in the result div
-        const resultDiv = document.getElementById('composition-result');
-        setDisplayContent(resultDiv, formatResult(result));
+        const resultDivShort = document.getElementById('composition-result-short');
+        setDisplayContent(resultDivShort, formatResult(result));
+        const resultDivLong = document.getElementById('composition-result-long');
+        setDisplayContent(resultDivLong, longFormatResult(result));
 
         // Enable the PreviousResult option in dropdown 1 and update its label
         const dropdown1 = document.getElementById('graph-type-1');
@@ -905,7 +921,6 @@
       }
 
       function composeGraphs(graphs) {
-        const resultDiv = document.getElementById('composition-result');
         let finalResult;
 
         if (graphs.length === 3) {
@@ -939,6 +954,43 @@
         return resultString;
       }
 
+      function longFormatResult(result) {
+        console.log(result);
+        if (result === undefined) {
+          return "";
+        }
+
+        if (result.A !== undefined || result.B !== undefined) {
+          let resultString = "";
+          resultString += longFormatResult(result.A);
+          resultString += "; ";
+          resultString += longFormatResult(result.B);
+          return resultString;
+        } else {
+          return longFormatResult(result);
+        }
+      }
+
+      function longFormatResult(result) {
+        if (result === undefined) {
+          return "";
+        }
+        let resultString = "";
+        const keys = Object.keys(result);
+        keys.sort((a, b) => b - a);
+        for (let i = 0; i < keys.length; i++) {
+          const key = keys[i];
+          const value = result[key];
+          for (let j = 1; j <= value; j++) {
+            resultString += `${key}`;
+            if (j !== value || i !== keys.length - 1) {
+              resultString += ", ";
+            }
+          }
+        }
+        return resultString;
+      }
+
       function formatResult(result) {
         if (result === undefined) {
           return "";
@@ -959,15 +1011,21 @@
 
       function showComposeUnigraphs() {
         document.getElementById('compose-unigraphs').classList.remove('hidden');
-        document.getElementById('random-unigraph-composer').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList.add('hidden');
       }
 
-      function showRandomUnigraphComposer() {
-        document.getElementById('random-unigraph-composer').classList.remove('hidden');
+      function showRandomUnigraphGenerator() {
+        document.getElementById('random-unigraph-generator').classList.remove('hidden');
         document.getElementById('compose-unigraphs').classList.add('hidden');
       }
 
       function computeRandomUnigraph() {
+        for (let i = 1; i <= 3; i++) {
+          const resultDiv = document.getElementById(`random-unigraph-${i}`);
+          if (resultDiv) {
+            resultDiv.innerHTML = "";
+          }
+        }
         const numVertices = document.getElementById('num-vertices').value;
         const numGraphs = document.getElementById('num-graphs').value;
         const vertice_partitions = partitionVertices(numVertices, numGraphs);
@@ -993,9 +1051,11 @@
         }
 
         const finalResult = composeGraphs(graphs);
-        const compositionResultDiv = document.getElementById('final-result');
+        const compositionResultDiv = document.getElementById('final-result-short');
+        const compositionResultDivLong = document.getElementById('final-result-long');
         if (compositionResultDiv) {
-          compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
+          compositionResultDiv.innerHTML = `final result short: ${formatResult(finalResult)}`;
+          compositionResultDivLong.innerHTML = `final result long: ${longFormatResult(finalResult)}`;
         }
       }
 
