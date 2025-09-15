@@ -33,6 +33,7 @@
       <h2>Welcome to Unigraph Composer</h2>
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
+      <button onclick="showDecomposeUnigraphs()">Decompose Unigraphs</button>
     </div>
 
     <div id="compose-unigraphs" class="hidden">
@@ -75,6 +76,19 @@
       <div id="final-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
     </div>
 
+    <div id="decompose-unigraphs" class="hidden">
+      <h2>Decompose Unigraphs</h2>
+      <p>Decompose a unigraph into its basic components:</p>
+      <input type="text" id="decompose-unigraph-input" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a unigraph to decompose...">
+      <br>
+      <br>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeUnigraph()">Decompose Unigraph</button>
+      <br>
+      <br>
+      <div id="decompose-unigraph-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Unigraph' to see the result here..."></div>
+      <br>
+    </div>
+
     <script>
       // Global variable to store the previous composition result
       let previousResult = null;
@@ -92,7 +106,7 @@
           inputs: ['m'],
           validation: [{ param: 'm', min: 2, name: 'mK₂' }],
           degSequence: ({m}) => ({1: 2 * m}),
-          potentialVertices: [2,4,6,8,10,12,14,16,18,20],
+          potentialVertices: [4,6,8,10,12,14,16,18,20],
           potentialParamsByNumVertices: (numVertices) => (
             [{m: numVertices / 2}]
           )
@@ -693,8 +707,6 @@
 
         const params1 = getParameterValues(1);
         const params2 = getParameterValues(2);
-        console.log("params1", params1);
-        console.log("params2", params2);
         if (!checkValidity(g1, params1, 1) || !checkValidity(g2, params2, 2)) {
           return; // Don't proceed if validation failed
         }
@@ -955,7 +967,6 @@
       }
 
       function longFormatResult(result) {
-        console.log(result);
         if (result === undefined) {
           return "";
         }
@@ -1010,13 +1021,21 @@
       }
 
       function showComposeUnigraphs() {
-        document.getElementById('compose-unigraphs').classList.remove('hidden');
         document.getElementById('random-unigraph-generator').classList.add('hidden');
+        document.getElementById('decompose-unigraphs').classList.add('hidden');
+        document.getElementById('compose-unigraphs').classList.remove('hidden');
       }
 
       function showRandomUnigraphGenerator() {
-        document.getElementById('random-unigraph-generator').classList.remove('hidden');
         document.getElementById('compose-unigraphs').classList.add('hidden');
+        document.getElementById('decompose-unigraphs').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList.remove('hidden');
+      }
+
+      function showDecomposeUnigraphs() {
+        document.getElementById('compose-unigraphs').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList. add('hidden');
+        document.getElementById('decompose-unigraphs').classList.remove('hidden');
       }
 
       function computeRandomUnigraph() {
@@ -1157,6 +1176,123 @@
         });
 
         return solutions;
+      }
+
+      function formatComponents(components) {
+        return components.map(component => {
+          const hashResult = convertToHashmap(component);
+          return formatResult(hashResult);
+        }).join('<br>');
+      }
+
+      function convertToHashmap(component) {
+        const hashmap = {};
+        const degreeArray = component.split(', ');
+        for (let i = 0; i < degreeArray.length; i++) {
+          const degree = degreeArray[i];
+          hashmap[degree] = hashmap[degree] + 1 || 1;
+        }
+        return hashmap;
+      }
+
+      function decomposeUnigraph() {
+        const input = document.getElementById('decompose-unigraph-input').value;
+        const components = decompose(input);
+        const formattedComponents = formatComponents(components);
+        document.getElementById('decompose-unigraph-result').innerHTML = formattedComponents;
+      }
+
+      function decompose(input) {
+        const d = convertToDegSequence(input);
+        let i = 0;
+        let j = Object.keys(d).length;
+        let b = 0;
+        let s = [];
+        while (i < j) {
+          if (j - i == 1) {
+            s.push("0");
+            return s;
+          }
+          const bestPair = findBestPair(d, i, j, b);
+          let p = bestPair[0];
+          let q = bestPair[1];
+          if (p == -1 && q == -1) {
+            let text = "";
+            for (let x = i + 1; x <= j; x++) {
+              text += `${d[x] - b}`;
+              if (x !== j) {
+                text += ", ";
+              }
+            }
+            s.push(text)
+            return s;
+          } else  if ( p == 0 && q == 1) {
+            s.push("null; 0")
+          } else if (p == 1 && q == 0) {
+            s.push("0; null")
+          } else {
+            let a = j - i - p - q;
+            let left = "";
+            for (let y = i + 1; y <= i + p; y++) {
+              left += `${d[y] - b - a}`;
+              if (y !== i + p) {
+                left += ", ";
+              }
+            }
+            let right = "";
+            for (let y = j - q + 1; y <= j; y++) {
+              right += `${d[y] - b}`;
+              if (y !== j) {
+                right += ", ";
+              }
+            }
+            s.push(`${left}; ${right}`)
+          }
+          i = i + p;
+          j = j - q;
+          b = b + p;
+        }
+        return s;
+      }
+
+      function convertToDegSequence(input) {
+        const result = {};
+        const inputArray = input.split(',');
+        for (let i = 0; i < inputArray.length; i++) {
+          result[i + 1] = inputArray[i];
+        }
+        return result;
+      }
+
+      function findBestPair(d, i, j, b) {
+        let m = j - i;
+        let d_prime = {};
+        for (let t = 1; t <= m; t++) {
+          d_prime[t] = d[i + t] - b;
+        }
+        if (d_prime[m] == 0) {
+          return [0, 1];
+        } else if (d_prime[1] == m - 1) {
+          return [1, 0];
+        } else {
+          let p = 1;
+          let q = 0;
+          let front_sum = d_prime[1];
+          let back_sum = 0;
+          while (p + q < m && front_sum != (p * (m - q - 1)) + back_sum) {
+            p++;
+            front_sum += d_prime[p];
+            while (p + q < m && d_prime[m - q] < p) {
+              q++;
+              back_sum += d_prime[m - q + 1];
+            }
+          }
+          if (p + q < m && front_sum == (p * (m - q - 1)) + back_sum) {
+            return [p, q];
+          } else {
+            return [-1, -1];
+          }
+        }
       }
 
       // Initialize the HTML when the page loads
