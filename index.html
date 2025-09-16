@@ -1180,9 +1180,29 @@
 
       function formatComponents(components) {
         return components.map(component => {
-          const hashResult = convertToHashmap(component);
-          return formatResult(hashResult);
+          if (component.includes(';')) {
+            const left = component.split('; ')[0];
+            const right = component.split('; ')[1];
+            const leftHashmap = convertToHashmap(left);
+            const rightHashmap = convertToHashmap(right);
+            const fullHashmap = combineHashmaps(leftHashmap, rightHashmap);
+            return formatResult(fullHashmap);
+          } else {
+            const hashResult = convertToHashmap(component);
+            return formatResult(hashResult);
+          }
         }).join('<br>');
+      }
+
+      function combineHashmaps(leftHashmap, rightHashmap) {
+        const fullHashmap = {};
+        Object.entries(leftHashmap).forEach(([key, value]) => {
+          fullHashmap[key] = value;
+        });
+        Object.entries(rightHashmap).forEach(([key, value]) => {
+          fullHashmap[key] = value;
+        });
+        return fullHashmap;
       }
 
       function convertToHashmap(component) {
