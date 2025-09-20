@@ -209,40 +209,40 @@
             return result;
           }
         },
-        // 'S2': {
-        //   split: true,
-        //   inputs: ['m'],
-        //   validation: [{ param: 'm', min: 2, name: 'S2' }],
-        //   dynamic: true,
-        //   degSequence: (params) => {
-        //     // n is the sum of qi from i=1 to m, calculated in getDegreeSequence
-        //     const m = params.m;
-        //     let n = 0;
-        //     const A = {};
-        //     const B = {};
+        'S2': {
+          split: true,
+          inputs: ['m'],
+          validation: [{ param: 'm', min: 2, name: 'S2' }],
+          dynamic: true,
+          degSequence: (params) => {
+            // n is the sum of qi from i=1 to m, calculated in getDegreeSequence
+            const m = params.m;
+            let n = 0;
+            const A = {};
+            const B = {};
 
-        //     for (let i = 1; i <= m; i++) {
-        //       n += params[`q${i}`];
-        //     }
+            for (let i = 1; i <= m; i++) {
+              n += params[`q${i}`];
+            }
 
-        //     for (let i = 1; i <= m; i++) {
-        //       const pi = params[`p${i}`];
-        //       const qi = params[`q${i}`];
-        //       A[pi + n - 1] = qi;
-        //       if (B[1] === undefined) {
-        //         B[1] = 0;
-        //       }
-        //       B[1] += pi * qi;
-        //     }
+            for (let i = 1; i <= m; i++) {
+              const pi = params[`p${i}`];
+              const qi = params[`q${i}`];
+              A[pi + n - 1] = qi;
+              if (B[1] === undefined) {
+                B[1] = 0;
+              }
+              B[1] += pi * qi;
+            }
 
-        //     return {
-        //       A: A,
-        //       B: B
-        //     };
-        //   },
-        //   potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
-        //   potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
-        // },
+            return {
+              A: A,
+              B: B
+            };
+          },
+          potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+          potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
+        },
         'S3': {
           split: true,
           inputs: ['p', 'q1', 'q2'],
@@ -407,7 +407,7 @@
         if (inputType === 'partition') {
           return `
             <div id="input-${inputType}-${graph_num}" class="hidden">
-              <label for="${inputType}">${inputLabels[inputType]}</label>
+              <label for="${inputType}-${graph_num}">${inputLabels[inputType]}</label>
               <select id="${inputType}-${graph_num}" name="${inputType}" onchange="updateDegreeSequenceDisplay(${graph_num})">
                 <option value="A">Partition A</option>
                 <option value="B">Partition B</option>
@@ -424,7 +424,7 @@
 
         return `
           <div id="input-${inputType}-${graph_num}" class="hidden">
-            <label for="${inputType}">${inputLabels[inputType]}</label>
+            <label for="${inputType}-${graph_num}">${inputLabels[inputType]}</label>
             <input type="number" id="${inputType}-${graph_num}" name="${inputType}" min="${minValues[inputType]}"${onchange}>
           </div>
         `;
@@ -488,8 +488,8 @@
                 <div id="previous-result-text-${graph_num}" style="font-family: monospace; margin-top: 5px;"></div>
               </div>
               <div style="margin-top: 15px;">
-                <label for="graph-${graph_num}-sequence">Graph ${graph_num} Degree Sequence:</label><br>
-                <div id="graph-${graph_num}-sequence" style="width: 440px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px; color: #666;" data-placeholder="Configure graph parameters to see degree sequence..."></div>
+                <div id="graph-${graph_num}-sequence-label">Graph ${graph_num} Degree Sequence:</div><br>
+                <div id="graph-${graph_num}-sequence" aria-labelledby="graph-${graph_num}-sequence-label" style="width: 440px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; border-radius: 4px; color: #666;" data-placeholder="Configure graph parameters to see degree sequence..."></div>
               </div>
             </div>
           </div>
@@ -623,7 +623,10 @@
             // Apply transformation
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
-              setDisplayContent(displayDiv, formatResult(degreeSequence));
+              const [isGraphUnigraph, uniLabel] = isUnigraph(degreeSequence);
+              const result = formatResult(degreeSequence);
+              const text = isGraphUnigraph ? `unigraph (${uniLabel}): ${result}` : 'is not a unigraph: ' + result;
+              setDisplayContent(displayDiv, text);
             } else {
               setDisplayContent(displayDiv, "");
             }
@@ -631,6 +634,7 @@
             setDisplayContent(displayDiv, "");
           }
         } catch (error) {
+          console.error('updateDegreeSequenceDisplay error:', error);
           // If there's an error (incomplete configuration), show placeholder
           setDisplayContent(displayDiv, "");
         }
@@ -1352,8 +1356,6 @@
         if (input.includes(';')) {
           const left = strippedInput.split(';')[0];
           const right = strippedInput.split(';')[1];
-          console.log("left: ", left);
-          console.log("right: ", right);
           hashmap = {A: convertStringtoHashmap(left), B: convertStringtoHashmap(right)};
         } else {
           const inputArray = strippedInput.split(',');
@@ -1366,22 +1368,243 @@
             }
           }
         }
-        console.log("hashmap: ", hashmap);
         return hashmap;
       }
 
       function graphComposition() {
         const input1 = document.getElementById('compose-graphs-input-1').value;
-        console.log("input1: ", input1);
         const input2 = document.getElementById('compose-graphs-input-2').value;
-        console.log("input2: ", input2);
         const degSequence1 = convertStringtoHashmap(input1);
         const degSequence2 = convertStringtoHashmap(input2);
-        console.log("degSequence1: ", degSequence1);
-        console.log("degSequence2: ", degSequence2);
         const result = compose(degSequence1, degSequence2);
-        console.log("result: ", result);
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
+      }
+
+      function isUnigraph(input) {
+        if (isSplitGraph(input)) {
+          if (isSpq(input)) {
+            return [true, "Spq"];
+          }
+          // if (isS2(input)) {
+          //   return [true, "S2"];
+          // }
+          if (isS3(input)) {
+            return [true, "S3"];
+          }
+          // if (isS4(input)) {
+          //   return [true, "S4"];
+          // }
+          if (isSVG(input)) {
+            return [true, "SVG"];
+          }
+        } else {
+          if (isC5(input)) {
+            return [true, "C5"];
+          }
+          if (ismK2(input)) {
+            return [true, "mK2"];
+          }
+          if (isU2(input)) {
+            return [true, "U2"];
+          }
+          if (isU3(input)) {
+            return [true, "U3"];
+          }
+        }
+        return [false, "None"];
+      }
+
+      function isC5(input) {
+        const keys = Object.keys(input);
+        const values = Object.values(input);
+        if (keys.length !== 1 || values[0] !== 5) {
+          return false;
+        }
+        return true;
+      }
+
+      function ismK2(input) {
+        const keys = Object.keys(input);
+        const values = Object.values(input);
+        if (keys.length > 1) {
+          return false;
+        }
+        const d1 = Number(keys[0]);
+        const r1 = values[0];
+        if (d1 !== 1 || r1 % 2 !== 0) {
+          return false;
+        }
+        const m = r1 / 2;
+        if (m < 2) {
+          return false;
+        }
+        return true;
+      }
+
+      function isU2(input) {
+        const ds = Object.keys(input).sort((a, b) => b - a);
+        if (ds.length !== 2) {
+          return false;
+        }
+        const orderedDs = ds.sort((a, b) => b - a);
+        const d1 = Number(orderedDs[0]);
+        const r1 = input[d1];
+        const d2 = Number(orderedDs[1]);
+        const r2 = input[d2];
+        if (r1 !== 1 || r2 <= 1 || d2 !== 1) {
+          return false;
+        }
+        const m = (r2 - d1)
+        if (m % 2 !== 0 || m < 1) {
+          return false;
+        }
+        const l = d1;
+        if (l < 1) {
+          return false;
+        }
+        return true;
+      }
+
+      function isU3(input) {
+        const ds = Object.keys(input);
+        if (ds.length !== 2) {
+          return false;
+        }
+        const orderedDs = ds.sort((a, b) => b - a);
+        const d1 = Number(orderedDs[0]);
+        const r1 = input[d1];
+        const d2 = Number(orderedDs[1]);
+        const r2 = input[d2];
+        if (r1 !== 1 || r2 <= 1 || d2 !== 2) {
+          return false;
+        }
+        const m = (d1 - 2)
+        if (m % 2 !== 0 || m < 1) {
+          return false;
+        }
+        return true;
+      }
+
+      function isSVG(input) {
+        const a = input.A;
+        const b = input.B;
+        const dA = Object.keys(a);
+        const rA = Object.values(a);
+        const dB = Object.keys(b);
+        const rB = Object.values(b);
+        if (dA.length !== 1 && dB.length !== 1) {
+          return false;
+        }
+        if (dA.length === 0 && dB.length === 0) {
+          return false;
+        }
+        if (dA.length === 0 && dB.length === 1) {
+          const d1 = Number(dB[0]);
+          const r1 = rB[0];
+          if (d1 == 1 || r1 == 0) {
+            return true;
+          }
+        }
+        if (dA.length === 1 && dB.length === 0) {
+          const d1 = Number(dA[0]);
+          const r1 = rA[0];
+          if (d1 == 0 || r1 == 1) {
+            return true;
+          }
+
+        }
+        return false;
+      }
+
+      function isSpq(input) {
+        const a = input.A;
+        const b = input.B;
+        const dA = Object.keys(a);
+        const rA = Object.values(a);
+        const dB = Object.keys(b);
+        const rB = Object.values(b);
+        if (dA.length !== 1 || dB.length !== 1) {
+          return false;
+        }
+        const d1 = Number(dA[0]);
+        const r1 = rA[0];
+        const d2 = Number(dB[0]);
+        const r2 = rB[0];
+        console.log("d1: ", d1);
+        console.log("r1: ", r1);
+        console.log("d2: ", d2);
+        console.log("r2: ", r2);
+        if (r2 % r1 !== 0 || d2 !== 1) {
+          return false;
+        }
+        const p = r2 / r1;
+        const q = r1;
+        if (p < 1 || q < 2) {
+          return false;
+        }
+        return true;
+      }
+
+      function isS2(input) {
+        const a = input.A;
+        const b = input.B;
+        const dA = Object.keys(a);
+        const rA = Object.values(a);
+        const dB = Object.keys(b);
+        const rB = Object.values(b);
+        if (dA.length < 2 || dB.length !== 1 || dB[0] !== 1) {
+          return false;
+        }
+        let n = 0;
+        let p = [];
+        let q = [];
+        for (let i = 1; i <= dA.length; i++) {
+          const d = Number(dA[i]);
+          const r = rA[i];
+          p[i] = d - n + 1;
+          q[i] = r;
+          n += r;
+          if (i > 1 && p[i - 1] <= p[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function isS3(input) {
+        const a = input.A;
+        const b = input.B;
+        const dA = Object.keys(a);
+        const rA = Object.values(a);
+        const dB = Object.keys(b);
+        const rB = Object.values(b);
+        if (dA.length !== 1 || dB.length !== 2) {
+          return false;
+        }
+        const d1 = Number(dA[0]);
+        const r1 = rA[0];
+        const orderedDBs = dB.sort((a, b) => b - a);
+        const d2 = Number(orderedDBs[0]);
+        const r2 = b[d2];
+        const d3 = Number(orderedDBs[1]);
+        const r3 = b[d3];
+        if (r2 !== 1 || d3 !== 1) {
+          return false;
+        }
+        const p = d1 - r1;
+        const q1 = d2;
+        const q2 = r1 - d2;
+        if (p < 1 || q1 < 2 || q2 < 1) {
+          return false;
+        }
+        return true;
+      }
+
+      function isSplitGraph(input) {
+        if (input.A === undefined || input.B === undefined) {
+          return false;
+        }
+        return true;
       }
 
       // Initialize the HTML when the page loads
