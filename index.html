@@ -30,10 +30,10 @@
   </head>
   <body>
     <div id="start-screen">
-      <h2>Welcome to Unigraph Composer</h2>
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
-      <button onclick="showDecomposeUnigraphs()">Decompose Unigraphs</button>
+      <button onclick="showDecompose()">Graph Decomposition Tool</button>
+      <button onclick="showComposeGraphs()">Compose Graphs</button>
     </div>
 
     <div id="compose-unigraphs" class="hidden">
@@ -76,16 +76,32 @@
       <div id="final-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
     </div>
 
-    <div id="decompose-unigraphs" class="hidden">
-      <h2>Decompose Unigraphs</h2>
-      <p>Decompose a unigraph into its basic components:</p>
-      <input type="text" id="decompose-unigraph-input" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a unigraph to decompose...">
+    <div id="decompose-graph" class="hidden">
+      <h2>Graph Decomposition Tool</h2>
+      <p>Decompose a graph into its basic components:</p>
+      <input type="text" id="decompose-graph-input" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to decompose... Example: 5, 5, 4, 4, 1">
       <br>
       <br>
-      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeUnigraph()">Decompose Unigraph</button>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraph()">Decompose Graph</button>
       <br>
       <br>
-      <div id="decompose-unigraph-result" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Unigraph' to see the result here..."></div>
+      <div id="decompose-graph-result" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+      <br>
+    </div>
+
+    <div id="compose-graphs" class="hidden">
+      <h2>Graph Composition Tool</h2>
+      <p>Compose a graph by degree sequence:</p>
+      <input type="text" id="compose-graphs-input-1" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to compose... Example: 5, 5, 4, 4, 1">
+      <br>
+      <br>
+      <input type="text" id="compose-graphs-input-2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a split graph to compose... Example: 2, 1 ; 1, 1">
+      <br>
+      <br>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="graphComposition()">Compose Graphs</button>
+      <br>
+      <br>
+      <div id="compose-graphs-result" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compose Graphs' to see the result here..."></div>
       <br>
     </div>
 
@@ -1007,6 +1023,10 @@
           return "";
         }
 
+        if (result === null) {
+          return "null";
+        }
+
         // Handle split graphs (with A and B partitions)
         if (result.A !== undefined || result.B !== undefined) {
           let resultString = "";
@@ -1022,20 +1042,30 @@
 
       function showComposeUnigraphs() {
         document.getElementById('random-unigraph-generator').classList.add('hidden');
-        document.getElementById('decompose-unigraphs').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('compose-unigraphs').classList.remove('hidden');
       }
 
       function showRandomUnigraphGenerator() {
         document.getElementById('compose-unigraphs').classList.add('hidden');
-        document.getElementById('decompose-unigraphs').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList.remove('hidden');
       }
 
-      function showDecomposeUnigraphs() {
+      function showDecompose() {
         document.getElementById('compose-unigraphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList. add('hidden');
-        document.getElementById('decompose-unigraphs').classList.remove('hidden');
+        document.getElementById('compose-graphs').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.remove('hidden');
+      }
+
+      function showComposeGraphs() {
+        document.getElementById('compose-unigraphs').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('compose-graphs').classList.remove('hidden');
       }
 
       function computeRandomUnigraph() {
@@ -1179,35 +1209,36 @@
       }
 
       function formatComponents(components) {
-        return components.map(component => {
+        let index = 1;
+        let result = "";
+        components.forEach(component => {
+          let formattedComponent = "";
           if (component.includes(';')) {
             const left = component.split('; ')[0];
             const right = component.split('; ')[1];
-            const leftHashmap = convertToHashmap(left);
-            const rightHashmap = convertToHashmap(right);
-            const fullHashmap = combineHashmaps(leftHashmap, rightHashmap);
-            return formatResult(fullHashmap);
+            const a = convertToHashmap(left);
+            const b = convertToHashmap(right);
+            const a_formatted = formatResult(a);
+            const b_formatted = formatResult(b);
+            formattedComponent = `component ${index}: ${a_formatted}; ${b_formatted}`;
           } else {
             const hashResult = convertToHashmap(component);
-            return formatResult(hashResult);
+            formattedComponent = `component ${index}: ${formatResult(hashResult)}`;
           }
-        }).join('<br>');
-      }
-
-      function combineHashmaps(leftHashmap, rightHashmap) {
-        const fullHashmap = {};
-        Object.entries(leftHashmap).forEach(([key, value]) => {
-          fullHashmap[key] = value;
+          result += `${formattedComponent}<br>`;
+        index++;
         });
-        Object.entries(rightHashmap).forEach(([key, value]) => {
-          fullHashmap[key] = value;
-        });
-        return fullHashmap;
+        return result;
       }
 
       function convertToHashmap(component) {
+        if (component == "null") {
+          return null;
+        }
+
         const hashmap = {};
         const degreeArray = component.split(', ');
+
         for (let i = 0; i < degreeArray.length; i++) {
           const degree = degreeArray[i];
           hashmap[degree] = hashmap[degree] + 1 || 1;
@@ -1215,11 +1246,11 @@
         return hashmap;
       }
 
-      function decomposeUnigraph() {
-        const input = document.getElementById('decompose-unigraph-input').value;
+      function decomposeGraph() {
+        const input = document.getElementById('decompose-graph-input').value;
         const components = decompose(input);
         const formattedComponents = formatComponents(components);
-        document.getElementById('decompose-unigraph-result').innerHTML = formattedComponents;
+        document.getElementById('decompose-graph-result').innerHTML = formattedComponents;
       }
 
       function decompose(input) {
@@ -1277,7 +1308,7 @@
 
       function convertToDegSequence(input) {
         const result = {};
-        const inputArray = input.split(',');
+        const inputArray = input.split(', ');
         for (let i = 0; i < inputArray.length; i++) {
           result[i + 1] = inputArray[i];
         }
@@ -1313,6 +1344,44 @@
             return [-1, -1];
           }
         }
+      }
+
+      function convertStringtoHashmap(input) {
+        let hashmap = {};
+        let strippedInput = input.replace(/ /g, '');
+        if (input.includes(';')) {
+          const left = strippedInput.split(';')[0];
+          const right = strippedInput.split(';')[1];
+          console.log("left: ", left);
+          console.log("right: ", right);
+          hashmap = {A: convertStringtoHashmap(left), B: convertStringtoHashmap(right)};
+        } else {
+          const inputArray = strippedInput.split(',');
+          for (let i = 0; i < inputArray.length; i++) {
+            const degree = inputArray[i];
+            if (hashmap[degree] === undefined) {
+              hashmap[degree] = 1;
+            } else {
+              hashmap[degree]++;
+            }
+          }
+        }
+        console.log("hashmap: ", hashmap);
+        return hashmap;
+      }
+
+      function graphComposition() {
+        const input1 = document.getElementById('compose-graphs-input-1').value;
+        console.log("input1: ", input1);
+        const input2 = document.getElementById('compose-graphs-input-2').value;
+        console.log("input2: ", input2);
+        const degSequence1 = convertStringtoHashmap(input1);
+        const degSequence2 = convertStringtoHashmap(input2);
+        console.log("degSequence1: ", degSequence1);
+        console.log("degSequence2: ", degSequence2);
+        const result = compose(degSequence1, degSequence2);
+        console.log("result: ", result);
+        document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
 
       // Initialize the HTML when the page loads
