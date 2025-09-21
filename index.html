@@ -579,6 +579,45 @@
         return params;
       }
 
+      function areAllRequiredParamsFilled(graphType, graph_num) {
+        const config = GRAPH_CONFIG[graphType];
+        if (!config) return false;
+
+        // PreviousResult requires an existing previousResult
+        if (graphType === 'PreviousResult') {
+          return previousResult !== null;
+        }
+
+        // Check static inputs declared for the graph type
+        if (config.inputs && config.inputs.length > 0) {
+          for (const input of config.inputs) {
+            const el = document.getElementById(`${input}-${graph_num}`);
+            if (!el) return false;
+            if (input === 'partition') {
+              if (el.value !== 'A' && el.value !== 'B') return false;
+            } else {
+              if (el.value === '' || el.value === null || el.value === undefined) return false;
+            }
+          }
+        }
+
+        // Special handling for S2 dynamic inputs (p1..pm, q1..qm)
+        if (graphType === 'S2') {
+          const mEl = document.getElementById(`m-${graph_num}`);
+          if (!mEl || mEl.value === '' || isNaN(Number(mEl.value))) return false;
+          const M = parseInt(mEl.value, 10);
+          if (!Number.isFinite(M) || M < 1) return false;
+          for (let i = 1; i <= M; i++) {
+            const pEl = document.getElementById(`s2-p${i}-${graph_num}`);
+            const qEl = document.getElementById(`s2-q${i}-${graph_num}`);
+            if (!pEl || !qEl) return false;
+            if (pEl.value === '' || qEl.value === '') return false;
+          }
+        }
+
+        return true;
+      }
+
       function showInputs(graph_num) {
         const selection = document.getElementById('graph-type-' + graph_num).value;
         const config = GRAPH_CONFIG[selection];
@@ -615,6 +654,12 @@
         try {
           const graphType = document.getElementById(`graph-type-${graph_num}`).value;
           const transformationType = document.getElementById(`transformation-${graph_num}`).value;
+
+          // Only compute when all required fields are filled
+          if (!areAllRequiredParamsFilled(graphType, graph_num)) {
+            setDisplayContent(displayDiv, "");
+            return;
+          }
 
           // Get parameter values for the new signature
           const params = getParameterValues(graph_num);
@@ -1382,20 +1427,20 @@
 
       function isUnigraph(input) {
         if (isSplitGraph(input)) {
+          if (isSVG(input)) {
+          return [true, "SVG"];
+          }
           if (isSpq(input)) {
             return [true, "Spq"];
           }
-          // if (isS2(input)) {
-          //   return [true, "S2"];
-          // }
+          if (isS2(input)) {
+            return [true, "S2"];
+          }
           if (isS3(input)) {
             return [true, "S3"];
           }
-          // if (isS4(input)) {
-          //   return [true, "S4"];
-          // }
-          if (isSVG(input)) {
-            return [true, "SVG"];
+          if (isS4(input)) {
+            return [true, "S4"];
           }
         } else {
           if (isC5(input)) {
@@ -1492,6 +1537,9 @@
         const rA = Object.values(a);
         const dB = Object.keys(b);
         const rB = Object.values(b);
+        if (dA.length > 1 || dB.length > 1) {
+          return false;
+        }
         if (dA.length !== 1 && dB.length !== 1) {
           return false;
         }
@@ -1499,9 +1547,9 @@
           return false;
         }
         if (dA.length === 0 && dB.length === 1) {
-          const d1 = Number(dB[0]);
-          const r1 = rB[0];
-          if (d1 == 1 || r1 == 0) {
+          const d2 = Number(dB[0]);
+          const r2 = rB[0];
+          if (d2 == 0 || r2 == 1) {
             return true;
           }
         }
@@ -1530,10 +1578,6 @@
         const r1 = rA[0];
         const d2 = Number(dB[0]);
         const r2 = rB[0];
-        console.log("d1: ", d1);
-        console.log("r1: ", r1);
-        console.log("d2: ", d2);
-        console.log("r2: ", r2);
         if (r2 % r1 !== 0 || d2 !== 1) {
           return false;
         }
@@ -1552,7 +1596,7 @@
         const rA = Object.values(a);
         const dB = Object.keys(b);
         const rB = Object.values(b);
-        if (dA.length < 2 || dB.length !== 1 || dB[0] !== 1) {
+        if (dA.length < 2 || dB.length !== 1 || Number(dB[0]) !== 1) {
           return false;
         }
         let n = 0;
@@ -1595,6 +1639,37 @@
         const q1 = d2;
         const q2 = r1 - d2;
         if (p < 1 || q1 < 2 || q2 < 1) {
+          return false;
+        }
+        return true;
+      }
+
+      function isS4(input) {
+        const a = input.A;
+        const b = input.B;
+        const dA = Object.keys(a);
+        const rA = Object.values(a);
+        const dB = Object.keys(b);
+        const rB = Object.values(b);
+        if (dA.length !== 2 || dB.length !== 1) {
+          return false;
+        }
+        const orderedDAs = dA.sort((a, b) => b - a);
+        const d1 = Number(orderedDAs[0]);
+        const r1 = a[d1];
+        const d2 = Number(orderedDAs[1]);
+        const r2 = a[d2];
+        const d3 = Number(dB[0]);
+        const r3 = b[d3];
+        if (r1 !== 1 || d3 !== 2) {
+          return false;
+        }
+        const q = r2 - 2;
+        const p = d2 - 3 - q;
+        if (p < 1 || q < 1) {
+          return false;
+        }
+        if (d1 !== 2 * (p + q + 1) + q || r3 !== (q * p) + (2 * p) + q + 1) {
           return false;
         }
         return true;
