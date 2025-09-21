@@ -345,21 +345,21 @@
         }
       };
 
-      const invertA = (g) => {
+      const invertA = (a) => {
         const inverse = {};
-        const sizeOfG = calculateSizeOfGraph(g) - 1;
-        Object.entries(g).forEach(([k, v]) => {
-          const newDegree = k - sizeOfG;
+        const sizeOfA = calculateSizeOfGraph(a) - 1;
+        Object.entries(a).forEach(([k, v]) => {
+          const newDegree = Number(k) - sizeOfA;
           inverse[newDegree] = v;
         });
         return inverse;
       };
 
-      const invertB = (g) => {
+      const invertB = (b) => {
         const inverse = {};
-        const sizeOfG = calculateSizeOfGraph(g) - 1;
-        Object.entries(g).forEach(([k, v]) => {
-          const newDegree = k + sizeOfG;
+        const sizeOfB = calculateSizeOfGraph(b) - 1;
+        Object.entries(b).forEach(([k, v]) => {
+          const newDegree = Number(k) + sizeOfB;
           inverse[newDegree] = v;
         });
         return inverse;
@@ -668,9 +668,11 @@
             // Apply transformation
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
-              const [isGraphUnigraph, uniLabel] = isUnigraph(degreeSequence);
+              const [isGraphUnigraph, uniLabel, uniType] = isUnigraph(degreeSequence);
               const result = formatResult(degreeSequence);
-              const text = isGraphUnigraph ? `unigraph (${uniLabel}): ${result}` : 'is not a unigraph: ' + result;
+              let text = isGraphUnigraph ? `(${uniLabel}): ${result}` : result;
+              const hasType = uniType != "None";
+              text = hasType ? uniType + " - " + text : text;
               setDisplayContent(displayDiv, text);
             } else {
               setDisplayContent(displayDiv, "");
@@ -1427,34 +1429,84 @@
 
       function isUnigraph(input) {
         if (isSplitGraph(input)) {
-          if (isSVG(input)) {
-          return [true, "SVG"];
+          const standardSplitComponent = isSplitComponent(input);
+          const standardSplitComponentResult = standardSplitComponent[0];
+          const standardSplitComponentType = standardSplitComponent[1];
+          if (standardSplitComponentResult) {
+            return [true, standardSplitComponentType, "Standard"];
           }
-          if (isSpq(input)) {
-            return [true, "Spq"];
+          const inverse = calculateInverse(input);
+          console.log("inverse", inverse);
+          const inverseSplitComponent = isSplitComponent(inverse);
+          const inverseSplitComponentResult = inverseSplitComponent[0];
+          const inverseSplitComponentType = inverseSplitComponent[1];
+          if (inverseSplitComponentResult) {
+            return [true, inverseSplitComponentType, "Inverse"];
           }
-          if (isS2(input)) {
-            return [true, "S2"];
+          const complement = calculateComplement(input);
+          const isComplementSplitComponent = isSplitComponent(complement);
+          const isComplementSplitComponentResult = isComplementSplitComponent[0];
+          const isComplementSplitComponentType = isComplementSplitComponent[1];
+          if (isComplementSplitComponentResult) {
+            return [true, isComplementSplitComponentType, "Complement"];
           }
-          if (isS3(input)) {
-            return [true, "S3"];
+          const complementOfInverse = calculateComplement(inverse);
+          const isComplementOfInverseSplitComponent = isSplitComponent(complementOfInverse);
+          const isComplementOfInverseSplitComponentResult = isComplementOfInverseSplitComponent[0];
+          const isComplementOfInverseSplitComponentType = isComplementOfInverseSplitComponent[1];
+          if (isComplementOfInverseSplitComponentResult) {
+            return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse"];
           }
-          if (isS4(input)) {
-            return [true, "S4"];
-          }
+          return [false, "None", "None"];
         } else {
-          if (isC5(input)) {
-            return [true, "C5"];
+          const nonSplitComponent = isNonSplitComponent(input);
+          const nonSplitComponentResult = nonSplitComponent[0];
+          const nonSplitComponentType = nonSplitComponent[1];
+          if (nonSplitComponentResult) {
+            return [true, nonSplitComponentType, "Standard"];
           }
-          if (ismK2(input)) {
-            return [true, "mK2"];
+          const complement = calculateComplement(input);
+          const inverseNonSplitComponent = isNonSplitComponent(complement);
+          const inverseNonSplitComponentResult = inverseNonSplitComponent[0];
+          const inverseNonSplitComponentType = inverseNonSplitComponent[1];
+          if (inverseNonSplitComponentResult) {
+            return [true, inverseNonSplitComponentType, "Complement"];
           }
-          if (isU2(input)) {
-            return [true, "U2"];
-          }
-          if (isU3(input)) {
-            return [true, "U3"];
-          }
+        }
+        return [false, "None", "None"];
+      }
+
+      function isSplitComponent(input) {
+        if (isSVG(input)) {
+          return [true, "SVG"];
+        }
+        if (isSpq(input)) {
+          return [true, "Spq"];
+        }
+        if (isS2(input)) {
+          return [true, "S2"];
+        }
+        if (isS3(input)) {
+          return [true, "S3"];
+        }
+        if (isS4(input)) {
+          return [true, "S4"];
+        }
+        return [false, "None"];
+      }
+
+      function isNonSplitComponent(input) {
+        if (isC5(input)) {
+          return [true, "C5"];
+        }
+        if (ismK2(input)) {
+          return [true, "mK2"];
+        }
+        if (isU2(input)) {
+          return [true, "U2"];
+        }
+        if (isU3(input)) {
+          return [true, "U3"];
         }
         return [false, "None"];
       }
@@ -1462,7 +1514,7 @@
       function isC5(input) {
         const keys = Object.keys(input);
         const values = Object.values(input);
-        if (keys.length !== 1 || values[0] !== 5) {
+        if (keys.length !== 1 || Number(keys[0]) !== 2 || values[0] !== 5) {
           return false;
         }
         return true;
