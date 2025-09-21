@@ -668,10 +668,28 @@
             // Apply transformation
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
-              const [isGraphUnigraph, uniLabel, uniType] = isUnigraph(degreeSequence);
+              const [isGraphUnigraph, uniLabel, uniType, uniParams] = isComponent(degreeSequence);
               const result = formatResult(degreeSequence);
               let text = isGraphUnigraph ? `(${uniLabel}): ${result}` : result;
               const hasType = uniType != "None";
+              const hasParams = uniParams != "None";
+              if (hasParams) {
+                let paramsString = "";
+                Object.entries(uniParams).forEach(([key, value]) => {
+                  if (Array.isArray(value)) {
+                    value.forEach((v, index) => {
+                      if (index == 0) {
+                        // nothing
+                      } else {
+                        paramsString += `${key}${index}: ${v}, `;
+                      }
+                    });
+                  } else {
+                    paramsString += `${key}: ${value}`;
+                  }
+                });
+                text = paramsString + " - " + text;
+              }
               text = hasType ? uniType + " - " + text : text;
               setDisplayContent(displayDiv, text);
             } else {
@@ -1427,121 +1445,144 @@
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
 
-      function isUnigraph(input) {
+      function isComponent(input) {
         if (isSplitGraph(input)) {
           const standardSplitComponent = isSplitComponent(input);
           const standardSplitComponentResult = standardSplitComponent[0];
           const standardSplitComponentType = standardSplitComponent[1];
+          const standardSplitComponentParams = standardSplitComponent[2];
           if (standardSplitComponentResult) {
-            return [true, standardSplitComponentType, "Standard"];
+            return [true, standardSplitComponentType, "Standard", standardSplitComponentParams];
           }
           const inverse = calculateInverse(input);
-          console.log("inverse", inverse);
           const inverseSplitComponent = isSplitComponent(inverse);
           const inverseSplitComponentResult = inverseSplitComponent[0];
           const inverseSplitComponentType = inverseSplitComponent[1];
+          const inverseSplitComponentParams = inverseSplitComponent[2];
           if (inverseSplitComponentResult) {
-            return [true, inverseSplitComponentType, "Inverse"];
+            return [true, inverseSplitComponentType, "Inverse", inverseSplitComponentParams];
           }
           const complement = calculateComplement(input);
           const isComplementSplitComponent = isSplitComponent(complement);
           const isComplementSplitComponentResult = isComplementSplitComponent[0];
           const isComplementSplitComponentType = isComplementSplitComponent[1];
+          const isComplementSplitComponentParams = isComplementSplitComponent[2];
           if (isComplementSplitComponentResult) {
-            return [true, isComplementSplitComponentType, "Complement"];
+            return [true, isComplementSplitComponentType, "Complement", isComplementSplitComponentParams];
           }
           const complementOfInverse = calculateComplement(inverse);
           const isComplementOfInverseSplitComponent = isSplitComponent(complementOfInverse);
           const isComplementOfInverseSplitComponentResult = isComplementOfInverseSplitComponent[0];
           const isComplementOfInverseSplitComponentType = isComplementOfInverseSplitComponent[1];
+          const isComplementOfInverseSplitComponentParams = isComplementOfInverseSplitComponent[2];
           if (isComplementOfInverseSplitComponentResult) {
-            return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse"];
+            return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse", isComplementOfInverseSplitComponentParams];
           }
           return [false, "None", "None"];
         } else {
           const nonSplitComponent = isNonSplitComponent(input);
           const nonSplitComponentResult = nonSplitComponent[0];
           const nonSplitComponentType = nonSplitComponent[1];
+          const nonSplitComponentParams = nonSplitComponent[2];
           if (nonSplitComponentResult) {
-            return [true, nonSplitComponentType, "Standard"];
+            return [true, nonSplitComponentType, "Standard", nonSplitComponentParams];
           }
           const complement = calculateComplement(input);
           const inverseNonSplitComponent = isNonSplitComponent(complement);
           const inverseNonSplitComponentResult = inverseNonSplitComponent[0];
           const inverseNonSplitComponentType = inverseNonSplitComponent[1];
+          const inverseNonSplitComponentParams = inverseNonSplitComponent[2];
           if (inverseNonSplitComponentResult) {
-            return [true, inverseNonSplitComponentType, "Complement"];
+            return [true, inverseNonSplitComponentType, "Complement", inverseNonSplitComponentParams];
           }
         }
         return [false, "None", "None"];
       }
 
       function isSplitComponent(input) {
-        if (isSVG(input)) {
-          return [true, "SVG"];
+        const isSVGComponent = isSVG(input);
+        const isSVGResult = isSVGComponent[0];
+        if (isSVGResult) {
+          return [true, "SVG", isSVGComponent[1]];
         }
-        if (isSpq(input)) {
-          return [true, "Spq"];
+        const isSpqComponent = isSpq(input);
+        const isSpqResult = isSpqComponent[0];
+        if (isSpqResult) {
+          return [true, "Spq", isSpqComponent[1]];
         }
-        if (isS2(input)) {
-          return [true, "S2"];
+        const isS2Component = isS2(input);
+        const isS2Result = isS2Component[0];
+        if (isS2Result) {
+          return [true, "S2", isS2Component[1]];
         }
-        if (isS3(input)) {
-          return [true, "S3"];
+        const isS3Component = isS3(input);
+        const isS3Result = isS3Component[0];
+        if (isS3Result) {
+          return [true, "S3", isS3Component[1]];
         }
-        if (isS4(input)) {
-          return [true, "S4"];
+        const isS4Component = isS4(input);
+        const isS4Result = isS4Component[0];
+        if (isS4Result) {
+          return [true, "S4", isS4Component[1]];
         }
-        return [false, "None"];
+        return [false, "None", "None"];
       }
 
       function isNonSplitComponent(input) {
-        if (isC5(input)) {
-          return [true, "C5"];
+        const isC5Component = isC5(input);
+        const isC5Result = isC5Component[0];
+        if (isC5Result) {
+          return [true, "C5", isC5Component[1]];
         }
-        if (ismK2(input)) {
-          return [true, "mK2"];
+        const ismK2Component = ismK2(input);
+        const ismK2Result = ismK2Component[0];
+        if (ismK2Result) {
+          return [true, "mK2", ismK2Component[1]];
         }
-        if (isU2(input)) {
-          return [true, "U2"];
+        const isU2Component = isU2(input);
+        const isU2Result = isU2Component[0];
+        if (isU2Result) {
+          return [true, "U2", isU2Component[1]];
         }
-        if (isU3(input)) {
-          return [true, "U3"];
+        const isU3Component = isU3(input);
+        const isU3Result = isU3Component[0];
+        if (isU3Result) {
+          return [true, "U3", isU3Component[1]];
         }
-        return [false, "None"];
+        return [false, "None", "None"];
       }
 
       function isC5(input) {
         const keys = Object.keys(input);
         const values = Object.values(input);
         if (keys.length !== 1 || Number(keys[0]) !== 2 || values[0] !== 5) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, "None"];
       }
 
       function ismK2(input) {
         const keys = Object.keys(input);
         const values = Object.values(input);
         if (keys.length > 1) {
-          return false;
+          return [false, "None"];
         }
         const d1 = Number(keys[0]);
         const r1 = values[0];
         if (d1 !== 1 || r1 % 2 !== 0) {
-          return false;
+          return [false, "None"];
         }
         const m = r1 / 2;
         if (m < 2) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, {m: m}];
       }
 
       function isU2(input) {
         const ds = Object.keys(input).sort((a, b) => b - a);
         if (ds.length !== 2) {
-          return false;
+          return [false, "None"];
         }
         const orderedDs = ds.sort((a, b) => b - a);
         const d1 = Number(orderedDs[0]);
@@ -1549,23 +1590,26 @@
         const d2 = Number(orderedDs[1]);
         const r2 = input[d2];
         if (r1 !== 1 || r2 <= 1 || d2 !== 1) {
-          return false;
+          return [false, "None"];
         }
-        const m = (r2 - d1)
-        if (m % 2 !== 0 || m < 1) {
-          return false;
+        if ((r2 - d1) % 2 !== 0) {
+          return [false, "None"];
+        }
+        const m = (r2 - d1) / 2;
+        if (m < 1) {
+          return [false, "None"];
         }
         const l = d1;
         if (l < 1) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, {l: l, m: m}];
       }
 
       function isU3(input) {
         const ds = Object.keys(input);
         if (ds.length !== 2) {
-          return false;
+          return [false, "None"];
         }
         const orderedDs = ds.sort((a, b) => b - a);
         const d1 = Number(orderedDs[0]);
@@ -1573,13 +1617,16 @@
         const d2 = Number(orderedDs[1]);
         const r2 = input[d2];
         if (r1 !== 1 || r2 <= 1 || d2 !== 2) {
-          return false;
+          return [false, "None"];
         }
-        const m = (d1 - 2)
-        if (m % 2 !== 0 || m < 1) {
-          return false;
+        if ((d1 - 2) % 2 !== 0) {
+          return [false, "None"];
         }
-        return true;
+        const m = (d1 - 2) / 2;
+        if (m < 1) {
+          return [false, "None"];
+        }
+        return [true, {m: m}];
       }
 
       function isSVG(input) {
@@ -1590,30 +1637,30 @@
         const dB = Object.keys(b);
         const rB = Object.values(b);
         if (dA.length > 1 || dB.length > 1) {
-          return false;
+          return [false, "None"];
         }
         if (dA.length !== 1 && dB.length !== 1) {
-          return false;
+          return [false, "None"]  ;
         }
         if (dA.length === 0 && dB.length === 0) {
-          return false;
-        }
-        if (dA.length === 0 && dB.length === 1) {
-          const d2 = Number(dB[0]);
-          const r2 = rB[0];
-          if (d2 == 0 || r2 == 1) {
-            return true;
-          }
+          return [false, "None"];
         }
         if (dA.length === 1 && dB.length === 0) {
           const d1 = Number(dA[0]);
           const r1 = rA[0];
           if (d1 == 0 || r1 == 1) {
-            return true;
+            return [true, {partition: "A"}];
           }
 
         }
-        return false;
+        if (dA.length === 0 && dB.length === 1) {
+          const d2 = Number(dB[0]);
+          const r2 = rB[0];
+          if (d2 == 0 || r2 == 1) {
+            return [true, {partition: "B"}];
+          }
+        }
+        return [false, "None"];
       }
 
       function isSpq(input) {
@@ -1624,21 +1671,21 @@
         const dB = Object.keys(b);
         const rB = Object.values(b);
         if (dA.length !== 1 || dB.length !== 1) {
-          return false;
+          return [false, "None"];
         }
         const d1 = Number(dA[0]);
         const r1 = rA[0];
         const d2 = Number(dB[0]);
         const r2 = rB[0];
         if (r2 % r1 !== 0 || d2 !== 1) {
-          return false;
+          return [false, "None"];
         }
         const p = r2 / r1;
         const q = r1;
         if (p < 1 || q < 2) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, {p: p, q: q}];
       }
 
       function isS2(input) {
@@ -1649,22 +1696,23 @@
         const dB = Object.keys(b);
         const rB = Object.values(b);
         if (dA.length < 2 || dB.length !== 1 || Number(dB[0]) !== 1) {
-          return false;
+          return [false, "None"];
         }
-        let n = 0;
         let p = [];
         let q = [];
-        for (let i = 1; i <= dA.length; i++) {
-          const d = Number(dA[i]);
-          const r = rA[i];
+        const n = rA.reduce((a, b) => a + b, 0);
+        console.log("a: ", a);
+        const orderedDAs = dA.sort((a, b) => b - a);
+        for (let i = 1; i <= orderedDAs.length; i++) {
+          const d = Number(orderedDAs[i - 1]);
+          const r = a[d];
           p[i] = d - n + 1;
           q[i] = r;
-          n += r;
-          if (i > 1 && p[i - 1] <= p[i]) {
-            return false;
+          if (p[i - 1] <= p[i]) {
+            return [false, "None"];
           }
         }
-        return true;
+        return [true, {p: p, q: q}];
       }
 
       function isS3(input) {
@@ -1675,7 +1723,7 @@
         const dB = Object.keys(b);
         const rB = Object.values(b);
         if (dA.length !== 1 || dB.length !== 2) {
-          return false;
+          return [false, "None"];
         }
         const d1 = Number(dA[0]);
         const r1 = rA[0];
@@ -1685,15 +1733,15 @@
         const d3 = Number(orderedDBs[1]);
         const r3 = b[d3];
         if (r2 !== 1 || d3 !== 1) {
-          return false;
+          return [false, "None"];
         }
         const p = d1 - r1;
         const q1 = d2;
         const q2 = r1 - d2;
         if (p < 1 || q1 < 2 || q2 < 1) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, {p: p, q1: q1, q2: q2}];
       }
 
       function isS4(input) {
@@ -1704,7 +1752,7 @@
         const dB = Object.keys(b);
         const rB = Object.values(b);
         if (dA.length !== 2 || dB.length !== 1) {
-          return false;
+          return [false, "None"];
         }
         const orderedDAs = dA.sort((a, b) => b - a);
         const d1 = Number(orderedDAs[0]);
@@ -1714,17 +1762,17 @@
         const d3 = Number(dB[0]);
         const r3 = b[d3];
         if (r1 !== 1 || d3 !== 2) {
-          return false;
+          return [false, "None"];
         }
         const q = r2 - 2;
         const p = d2 - 3 - q;
         if (p < 1 || q < 1) {
-          return false;
+          return [false, "None"];
         }
         if (d1 !== 2 * (p + q + 1) + q || r3 !== (q * p) + (2 * p) + q + 1) {
-          return false;
+          return [false, "None"];
         }
-        return true;
+        return [true, {p: p, q: q}];
       }
 
       function isSplitGraph(input) {
