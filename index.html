@@ -32,7 +32,7 @@
     <div id="start-screen">
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
-      <button onclick="showDecompose()">Graph Decomposition Tool</button>
+      <button onclick="showDecompose()">Graph Decomposition and Unigraph Detection Tool</button>
       <button onclick="showComposeGraphs()">Compose Graphs</button>
     </div>
 
@@ -116,7 +116,8 @@
           validation: [],
           degSequence: () => ({2: 5}),
           potentialVertices: [5],
-          potentialParamsByNumVertices: (numVertices) => ([{}])
+          potentialParamsByNumVertices: (numVertices) => ([{}]),
+          distinguishingNumber: () => 3
         },
         'mK2': {
           inputs: ['m'],
@@ -125,9 +126,12 @@
           potentialVertices: [4,6,8,10,12,14,16,18,20],
           potentialParamsByNumVertices: (numVertices) => (
             [{m: numVertices / 2}]
-          )
+          ),
+          distinguishingNumber: (m) => {
+            return (Math.ceil((1 + Math.sqrt(1 + 8*m)) / 2))
+          }
         },
-        'U2ml': {
+        'U2': {
           inputs: ['m', 'l'],
           validation: [
             { param: 'm', min: 1, name: 'U2(m, l)' },
@@ -149,9 +153,12 @@
             }
 
             return result;
+          },
+          distinguishingNumber: (m, l) => {
+            return Math.ceil(GRAPH_CONFIG['mK2'].distinguishingNumber(m), l)
           }
         },
-        'U3m': {
+        'U3': {
           inputs: ['m'],
           validation: [{ param: 'm', min: 1, name: 'U3(m)' }],
           degSequence: ({m}) => ({
@@ -161,7 +168,8 @@
           potentialVertices: [6,8,10,12,14,16,18,20],
           potentialParamsByNumVertices: (numVertices) => {
             return [{m: (numVertices - 4) / 2}];
-          }
+          },
+          distinguishingNumber: (m) => (GRAPH_CONFIG['mK2'].distinguishingNumber(m))
         },
         'SVG': {
           split: true,
@@ -181,7 +189,8 @@
             }
           },
           potentialVertices: [1],
-          potentialParamsByNumVertices: (numVertices) => ([{}])
+          potentialParamsByNumVertices: (numVertices) => ([{}]),
+          distinguishingNumber: () => 1
         },
         'Spq': {
           split: true,
@@ -207,7 +216,8 @@
               }
             }
             return result;
-          }
+          },
+          distinguishingNumber: (p, q) => (p * q)
         },
         'S2': {
           split: true,
@@ -241,7 +251,17 @@
             };
           },
           potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
-          potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices))
+          potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices)),
+          distinguishingNumber: (params) => {
+            const m = params.m;
+            const p = params.p;
+            const q = params.q;
+            let max = 0;
+            for (let i = 1; i <= m; i++) {
+              max = Math.max(max, GRAPH_CONFIG['S2'].distinguishingNumber({p: p[i], q: q[i]}));
+            }
+            return max;
+          }
         },
         'S3': {
           split: true,
@@ -274,7 +294,8 @@
               }
             }
             return result;
-          }
+          },
+          distinguishingNumber: (p, q1, q2) => Math.max(GRAPH_CONFIG['S2'].distinguishingNumber({p: p, q: q1}), GRAPH_CONFIG['S2'].distinguishingNumber({p: p + 1, q: q2}))
         },
         'S4': {
           split: true,
@@ -303,7 +324,8 @@
               }
             }
             return results;
-          }
+          },
+          distinguishingNumber: (p, q) => Math.max(GRAPH_CONFIG['S2'].distinguishingNumber({p: p, q: 2}), GRAPH_CONFIG['S2'].distinguishingNumber({p: p + 1, q: q}))
         },
         'PreviousResult': {
           inputs: [],
@@ -367,15 +389,15 @@
 
       // Define which graph types are available for each dropdown
       const GRAPH_OPTIONS = {
-        1: ['C5', 'mK2', 'U2ml', 'U3m', 'SVG', 'Spq', 'S2', 'S3', 'S4', 'PreviousResult'],
+        1: ['C5', 'mK2', 'U2', 'U3', 'SVG', 'Spq', 'S2', 'S3', 'S4', 'PreviousResult'],
         2: ['SVG', 'Spq', 'S2', 'S3', 'S4']
       };
 
       const GRAPH_LABELS = {
         'C5': 'C₅',
         'mK2': 'mK₂ for m ≥ 2',
-        'U2ml': 'U2(m, l), m ≥ 1, l ≥ 2',
-        'U3m': 'U3(m), m ≥ 1',
+        'U2': 'U2(m, l), m ≥ 1, l ≥ 2',
+        'U3': 'U3(m), m ≥ 1',
         'SVG': 'Single-vertex graph',
         'Spq': 'S(p, q), p ≥ 1, q ≥ 2',
         'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
@@ -707,7 +729,33 @@
         }
         text = hasType ? uniType + " - " + text : text;
         text = isGraphUnigraph ? `(${uniLabel}): ${text}` : text;
+        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams);
+        text = distinguishingNumberResult ? `distinguishing number: ${distinguishingNumberResult} - ` + text : text;
         return text;
+      }
+
+      function distinguishingNumber(uniLabel, uniType, uniParams) {
+        if (uniType !== "Standard") {
+          return undefined;
+        }
+        const type = GRAPH_CONFIG[uniLabel];
+        if (!type) return undefined;
+        switch (uniLabel) {
+          case 'mK2':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m);
+          case 'U2':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m, uniParams.l);
+          case 'U3':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m);
+          case 'S2':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams);
+          case 'S3':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.p, uniParams.q1, uniParams.q2);
+          case 'S4':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.p, uniParams.q);
+          default:
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams);
+        }
       }
 
       function setDisplayContent(element, content) {
@@ -1319,8 +1367,73 @@
         const input = document.getElementById('decompose-graph-input').value;
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
-        const formattedComponents = formatComponents(hashComponents);
+        const reversedHashComponents = hashComponents.reverse();
+        console.log("reversedHashComponents", reversedHashComponents);
+        const minimalComponents = minimalDecompose(reversedHashComponents);
+        console.log("minimalComponents", minimalComponents);
+        const formattedComponents = formatComponents(minimalComponents);
         document.getElementById('decompose-graph-result').innerHTML = formattedComponents;
+      }
+
+      function minimalDecompose(hashComponents) {
+        let combinedComponents = [];
+        for (let index = 0; index < hashComponents.length; index++) {
+          const component = hashComponents[index];
+          if (component.A !== undefined && index > 0) {
+            const previousComponent = hashComponents[index - 1];
+            const current = isComponent(component);
+            const previous = isComponent(previousComponent);
+            const currentType = current[1];
+            const previousType = previous[1];
+            if (currentType == "SVG" && previousType == "SVG" ) {
+              if (index === 1) {
+                combinedComponents.push(combineSVGs(previousComponent, component));
+              }
+              const currentParams = current[3];
+              const previousParams = previous[3];
+              if (currentParams.partition == previousParams.partition) {
+                const previousCombinedComponent = combinedComponents[combinedComponents.length - 1];
+                const combined = combineSVGs(previousCombinedComponent, component);
+                combinedComponents[combinedComponents.length - 1] = combined;
+              } else {
+                combinedComponents.push(component);
+              }
+            } else {
+              combinedComponents.push(component);
+            }
+          } else {
+            combinedComponents.push(component);
+          }
+        }
+        return combinedComponents;
+      }
+
+      function combineSVGs(firstComponent, secondComponent) {
+        if (firstComponent.A !== undefined && secondComponent.A !== undefined) {
+          const firstA = firstComponent.A;
+          if (Object.keys(firstA).length !== 1) {
+            return null;
+          }
+          const firstNumDegrees = Object.keys(firstA)[0];
+          const firstNumVertices = Object.values(firstA)[0];
+          const newComponent = {A: {[Number(firstNumDegrees) + 1]: firstNumVertices + 1}, B: {}};
+          return newComponent;
+        }
+        if (firstComponent.B !== undefined && secondComponent.B !== undefined) {
+          if (Object.keys(firstB).length !== 1) {
+            return null;
+          }
+          const firstNumDegrees = Object.keys(firstB)[0];
+          const firstNumVertices = Object.values(firstB)[0];
+          const newComponent = {A: {}, B: {0: Number(firstNumVertices) + 1}};
+          return newComponent;
+        }
+        if (firstComponent.A !== undefined && secondComponent.B !== undefined) {
+          return {A: {}, B: {0: 2}};
+        }
+        if (firstComponent.B !== undefined && secondComponent.A !== undefined) {
+          return {A: {1: 2}, B: {}};
+        }
       }
 
       function decompose(input) {
@@ -1633,8 +1746,6 @@
       function isSVG(input) {
         const a = input.A;
         const b = input.B;
-        console.log("a: ", a);
-        console.log("b: ", b);
         const dA = Object.keys(a);
         const rA = Object.values(a);
         const dB = Object.keys(b);
