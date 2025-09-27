@@ -217,7 +217,7 @@
             }
             return result;
           },
-          distinguishingNumber: (p, q) => (p * q)
+          distinguishingNumber: (p, q) => 1 // TODO: Implement distinguishing number for Spq
         },
         'S2': {
           split: true,
@@ -258,7 +258,8 @@
             const q = params.q;
             let max = 0;
             for (let i = 1; i <= m; i++) {
-              max = Math.max(max, GRAPH_CONFIG['S2'].distinguishingNumber({p: p[i], q: q[i]}));
+              const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p[i], q: q[i]});
+              max = Math.max(max, p_q);
             }
             return max;
           }
@@ -295,7 +296,11 @@
             }
             return result;
           },
-          distinguishingNumber: (p, q1, q2) => Math.max(GRAPH_CONFIG['S2'].distinguishingNumber({p: p, q: q1}), GRAPH_CONFIG['S2'].distinguishingNumber({p: p + 1, q: q2}))
+          distinguishingNumber: (p, q1, q2) => {
+            const p_q1 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p, q: q1});
+            const p_plus_1_q2 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p + 1, q: q2});
+            return Math.max(p_q1, p_plus_1_q2)
+          }
         },
         'S4': {
           split: true,
@@ -325,7 +330,11 @@
             }
             return results;
           },
-          distinguishingNumber: (p, q) => Math.max(GRAPH_CONFIG['S2'].distinguishingNumber({p: p, q: 2}), GRAPH_CONFIG['S2'].distinguishingNumber({p: p + 1, q: q}))
+          distinguishingNumber: (p, q) => {
+            const p_2 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p, q: 2});
+            const p_plus_1_q = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p + 1, q: q});
+            return Math.max(p_2, p_plus_1_q)
+          }
         },
         'PreviousResult': {
           inputs: [],
@@ -706,8 +715,8 @@
       }
 
       function generateText(degreeSequence) {
-        const [isGraphUnigraph, uniLabel, uniType, uniParams] = isComponent(degreeSequence);
-        let text = formatResult(degreeSequence);
+        const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
+        let text = formatResult(newDegreeSequence);
         const hasType = uniType != "None";
         const hasParams = uniParams != "None";
         if (hasParams) {
@@ -730,7 +739,7 @@
         text = hasType ? uniType + " - " + text : text;
         text = isGraphUnigraph ? `(${uniLabel}): ${text}` : text;
         const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams);
-        text = distinguishingNumberResult ? `distinguishing number: ${distinguishingNumberResult} - ` + text : text;
+        text = distinguishingNumberResult ? `DN: ${distinguishingNumberResult} - ` + text : text;
         return text;
       }
 
@@ -747,6 +756,8 @@
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m, uniParams.l);
           case 'U3':
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m);
+          case 'Spq':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.p, uniParams.q);
           case 'S2':
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams);
           case 'S3':
@@ -1368,9 +1379,7 @@
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
-        console.log("reversedHashComponents", reversedHashComponents);
         const minimalComponents = minimalDecompose(reversedHashComponents);
-        console.log("minimalComponents", minimalComponents);
         const formattedComponents = formatComponents(minimalComponents);
         document.getElementById('decompose-graph-result').innerHTML = formattedComponents;
       }
@@ -1560,37 +1569,40 @@
       }
 
       function isComponent(input) {
-        if (isSplitGraph(input)) {
-          const standardSplitComponent = isSplitComponent(input);
+        const splitGraph = isSplitGraph(input);
+        const splitGraphResult = splitGraph[0];
+        const newInput = splitGraph[1];
+        if (splitGraphResult) {
+          const standardSplitComponent = isSplitComponent(newInput);
           const standardSplitComponentResult = standardSplitComponent[0];
           const standardSplitComponentType = standardSplitComponent[1];
           const standardSplitComponentParams = standardSplitComponent[2];
           if (standardSplitComponentResult) {
-            return [true, standardSplitComponentType, "Standard", standardSplitComponentParams];
+            return [true, standardSplitComponentType, "Standard", standardSplitComponentParams, newInput];
           }
-          const inverse = calculateInverse(input);
+          const inverse = calculateInverse(newInput);
           const inverseSplitComponent = isSplitComponent(inverse);
           const inverseSplitComponentResult = inverseSplitComponent[0];
           const inverseSplitComponentType = inverseSplitComponent[1];
           const inverseSplitComponentParams = inverseSplitComponent[2];
           if (inverseSplitComponentResult) {
-            return [true, inverseSplitComponentType, "Inverse", inverseSplitComponentParams];
+            return [true, inverseSplitComponentType, "Inverse", inverseSplitComponentParams, newInput];
           }
-          const complement = calculateComplement(input);
+          const complement = calculateComplement(newInput);
           const isComplementSplitComponent = isSplitComponent(complement);
           const isComplementSplitComponentResult = isComplementSplitComponent[0];
           const isComplementSplitComponentType = isComplementSplitComponent[1];
           const isComplementSplitComponentParams = isComplementSplitComponent[2];
           if (isComplementSplitComponentResult) {
-            return [true, isComplementSplitComponentType, "Complement", isComplementSplitComponentParams];
+            return [true, isComplementSplitComponentType, "Complement", isComplementSplitComponentParams, newInput];
           }
-          const complementOfInverse = calculateComplement(inverse);
+          const complementOfInverse = calculateComplement(complement);
           const isComplementOfInverseSplitComponent = isSplitComponent(complementOfInverse);
           const isComplementOfInverseSplitComponentResult = isComplementOfInverseSplitComponent[0];
           const isComplementOfInverseSplitComponentType = isComplementOfInverseSplitComponent[1];
           const isComplementOfInverseSplitComponentParams = isComplementOfInverseSplitComponent[2];
           if (isComplementOfInverseSplitComponentResult) {
-            return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse", isComplementOfInverseSplitComponentParams];
+            return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse", isComplementOfInverseSplitComponentParams, newInput];
           }
           return [false, "None", "None", "None"];
         } else {
@@ -1599,7 +1611,7 @@
           const nonSplitComponentType = nonSplitComponent[1];
           const nonSplitComponentParams = nonSplitComponent[2];
           if (nonSplitComponentResult) {
-            return [true, nonSplitComponentType, "Standard", nonSplitComponentParams];
+            return [true, nonSplitComponentType, "Standard", nonSplitComponentParams, input];
           }
           const complement = calculateComplement(input);
           const inverseNonSplitComponent = isNonSplitComponent(complement);
@@ -1607,7 +1619,7 @@
           const inverseNonSplitComponentType = inverseNonSplitComponent[1];
           const inverseNonSplitComponentParams = inverseNonSplitComponent[2];
           if (inverseNonSplitComponentResult) {
-            return [true, inverseNonSplitComponentType, "Complement", inverseNonSplitComponentParams];
+            return [true, inverseNonSplitComponentType, "Complement", inverseNonSplitComponentParams, input];
           }
           return [false, "None", "None", "None"];
         }
@@ -1890,9 +1902,52 @@
 
       function isSplitGraph(input) {
         if (input.A === undefined || input.B === undefined) {
-          return false;
+          let i = 1;
+          const orderedKeys = Object.keys(input).sort((a, b) => b - a);
+          let orderedDegArray = [undefined];
+          for (let i = 0; i < orderedKeys.length; i++) {
+            const value = Number(input[orderedKeys[i]]);
+            for (let j = 0; j < value; j++) {
+              orderedDegArray.push(Number(orderedKeys[i]));
+            }
+          }
+          const n = orderedDegArray.length - 1;
+          while (i <= n - 1 && orderedDegArray[i + 1] >= i) {
+            i++;
+          }
+          const h = i;
+          let leftSum = 0;
+          let rightSum = 0;
+          for (let i = 1; i <= h; i++) {
+            leftSum += Number(orderedDegArray[i]);
+          }
+          for (let i = h + 1; i <= n; i++) {
+            rightSum += Number(orderedDegArray[i]);
+          }
+          if (leftSum == ((h - 1) * h) + rightSum) {
+            let newDegSequence = {};
+            let a = {}
+            for (let i = 1; i <= h; i++) {
+              if (a[orderedDegArray[i]] === undefined) {
+                a[orderedDegArray[i]] = 1;
+              } else {
+                a[orderedDegArray[i]]++;
+              }
+            }
+            let b = {};
+            for (let i = h + 1; i <= n; i++) {
+              if (b[orderedDegArray[i]] === undefined) {
+                b[orderedDegArray[i]] = 1;
+              } else {
+                b[orderedDegArray[i]]++;
+              }
+            }
+            return [true, {A: a, B: b}];
+          }
+          return [false, input];
+        } else {
+          return [true, input];
         }
-        return true;
       }
 
       // Initialize the HTML when the page loads
