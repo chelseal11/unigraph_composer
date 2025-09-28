@@ -716,12 +716,28 @@
 
       function generateText(degreeSequence) {
         const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
-        let text = formatResult(newDegreeSequence);
+        let degreeSequenceText = formatResult(newDegreeSequence);
+        const hasCompactedParam = uniParams.compacted !== undefined;
+        const isCompacted = hasCompactedParam && uniParams.compacted;
+        const paramsString = paramsText(uniParams);
+        const hasParams = paramsString != "";
+        const hasLabel = uniLabel != "None";
+        const uniLabelText = hasLabel ? `${uniLabel}` : "";
         const hasType = uniType != "None";
-        const hasParams = uniParams != "None";
-        if (hasParams) {
-          let paramsString = "";
+        const uniTypeText = hasType ? `${uniType} ` : "";
+        const componentTypeText = isCompacted ? `Compacted  ${uniTypeText}${uniLabelText}` : `${uniTypeText} ${uniLabelText}`;
+        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams);
+        const hasDistinguishingNumber = distinguishingNumberResult !== undefined;
+        return `Type: ${componentTypeText}<br>${paramsString}Degree Sequence: ${degreeSequenceText}<br>${hasDistinguishingNumber ? `Distinguishing Number: ${distinguishingNumberResult}` : ""}`;
+      }
+
+      function paramsText(uniParams) {
+        let paramsString = "";
+        if (uniParams !== "None") {
           Object.entries(uniParams).forEach(([key, value]) => {
+            if (key == "compacted") {
+              return;
+            }
             if (Array.isArray(value)) {
               value.forEach((v, index) => {
                 if (index == 0) {
@@ -734,13 +750,9 @@
               paramsString += `${key}: ${value}, `;
             }
           });
-          text = paramsString + " - " + text;
+          paramsString = "Params: " + paramsString + "<br>";
         }
-        text = hasType ? uniType + " - " + text : text;
-        text = isGraphUnigraph ? `(${uniLabel}): ${text}` : text;
-        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams);
-        text = distinguishingNumberResult ? `DN: ${distinguishingNumberResult} - ` + text : text;
-        return text;
+        return paramsString;
       }
 
       function distinguishingNumber(uniLabel, uniType, uniParams) {
@@ -1343,8 +1355,13 @@
 
       function formatComponents(components) {
         let result = "";
+        let index = 1;
         components.forEach(component => {
-          result += `${generateText(component)}<br>`;
+          result += `Component ${index}:<br>${generateText(component)}`;
+          if (index < components.length) {
+            result += "<br><br>";
+          }
+          index++;
         });
         return result;
       }
@@ -1775,15 +1792,20 @@
           const d1 = Number(dA[0]);
           const r1 = rA[0];
           if (d1 == 0 || r1 == 1) {
-            return [true, {partition: "A"}];
+            return [true, {partition: "A", compacted: false}];
           }
-
+          if (r1 > d1 && r1 - d1 == 1) {
+            return [true, {partition: "A", compacted: true}];
+          }
         }
         if (dA.length === 0 && dB.length === 1) {
           const d2 = Number(dB[0]);
           const r2 = rB[0];
           if (d2 == 0 || r2 == 1) {
-            return [true, {partition: "B"}];
+            return [true, {partition: "B", compacted: false}];
+          }
+          if (d2 == 2 && r2 > 1) {
+            return [true, {partition: "B", compacted: true}];
           }
         }
         return [false, "None"];
