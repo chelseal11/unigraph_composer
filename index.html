@@ -190,7 +190,14 @@
           },
           potentialVertices: [1],
           potentialParamsByNumVertices: (numVertices) => ([{}]),
-          distinguishingNumber: () => 1
+          distinguishingNumber: (degreeSequence) => {
+            if (degreeSequence.A === undefined || degreeSequence.B === undefined) {
+              return undefined;
+            }
+            const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
+            const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
+            return aTotalVertices + bTotalVertices;
+          }
         },
         'Spq': {
           split: true,
@@ -726,7 +733,7 @@
         const hasType = uniType != "None";
         const uniTypeText = hasType ? `${uniType} ` : "";
         const componentTypeText = isCompacted ? `Compacted  ${uniTypeText}${uniLabelText}` : `${uniTypeText} ${uniLabelText}`;
-        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams);
+        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams, newDegreeSequence);
         const hasDistinguishingNumber = distinguishingNumberResult !== undefined;
         return `Type: ${componentTypeText}<br>${paramsString}Degree Sequence: ${degreeSequenceText}<br>${hasDistinguishingNumber ? `Distinguishing Number: ${distinguishingNumberResult}` : ""}`;
       }
@@ -755,13 +762,15 @@
         return paramsString;
       }
 
-      function distinguishingNumber(uniLabel, uniType, uniParams) {
+      function distinguishingNumber(uniLabel, uniType, uniParams, degreeSequence) {
         if (uniType !== "Standard") {
           return undefined;
         }
         const type = GRAPH_CONFIG[uniLabel];
         if (!type) return undefined;
         switch (uniLabel) {
+          case 'C5':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber();
           case 'mK2':
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.m);
           case 'U2':
@@ -776,8 +785,10 @@
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.p, uniParams.q1, uniParams.q2);
           case 'S4':
             return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams.p, uniParams.q);
+          case 'SVG':
+            return GRAPH_CONFIG[uniLabel].distinguishingNumber(degreeSequence);
           default:
-            return GRAPH_CONFIG[uniLabel].distinguishingNumber(uniParams);
+            return undefined;
         }
       }
 
