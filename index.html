@@ -48,7 +48,7 @@
 
       <div id="result-container" style="margin-top: 20px;">
         <div id="composition-result-short" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
-        <div id="composition-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div>
+        <!-- <div id="composition-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Composition' to see the result here..."></div> -->
       </div>
     </div>
 
@@ -73,7 +73,7 @@
       <br>
       <div id="final-result-short" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
       <br>
-      <div id="final-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div>
+      <!-- <div id="final-result-long" style="width: 470px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Compute Random Unigraph' to see the result here..."></div> -->
     </div>
 
     <div id="decompose-graph" class="hidden">
@@ -546,12 +546,12 @@
 
         // Initialize display divs with placeholder text
         const resultDivShort = document.getElementById('composition-result-short');
-        const resultDivLong = document.getElementById('composition-result-long');
+        // const resultDivLong = document.getElementById('composition-result-long');
         const graph1Div = document.getElementById('graph-1-sequence');
         const graph2Div = document.getElementById('graph-2-sequence');
 
         setDisplayContent(resultDivShort, "");
-        setDisplayContent(resultDivLong, "");
+        // setDisplayContent(resultDivLong, "");
         setDisplayContent(graph1Div, "");
         setDisplayContent(graph2Div, "");
 
@@ -695,7 +695,7 @@
 
           // Only compute when all required fields are filled
           if (!areAllRequiredParamsFilled(graphType, graph_num)) {
-            setDisplayContent(displayDiv, "");
+            document.getElementById(`graph-${graph_num}-sequence`).innerHTML = "";
             return;
           }
 
@@ -707,17 +707,17 @@
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
               const text = generateText(degreeSequence);
-              setDisplayContent(displayDiv, text);
+              displayDiv.innerHTML = text;
             } else {
-              setDisplayContent(displayDiv, "");
+              displayDiv.innerHTML = "";
             }
           } else {
-            setDisplayContent(displayDiv, "");
+            displayDiv.innerHTML = "";
           }
         } catch (error) {
           console.error('updateDegreeSequenceDisplay error:', error);
           // If there's an error (incomplete configuration), show placeholder
-          setDisplayContent(displayDiv, "");
+          displayDiv.innerHTML = "";
         }
       }
 
@@ -905,8 +905,8 @@
         // Display result in the result div
         const resultDivShort = document.getElementById('composition-result-short');
         setDisplayContent(resultDivShort, formatResult(result));
-        const resultDivLong = document.getElementById('composition-result-long');
-        setDisplayContent(resultDivLong, longFormatResult(result));
+        // const resultDivLong = document.getElementById('composition-result-long');
+        // setDisplayContent(resultDivLong, longFormatResult(result));
 
         // Enable the PreviousResult option in dropdown 1 and update its label
         const dropdown1 = document.getElementById('graph-type-1');
@@ -1257,10 +1257,10 @@
 
         const finalResult = composeGraphs(graphs);
         const compositionResultDiv = document.getElementById('final-result-short');
-        const compositionResultDivLong = document.getElementById('final-result-long');
+        // const compositionResultDivLong = document.getElementById('final-result-long');
         if (compositionResultDiv) {
-          compositionResultDiv.innerHTML = `final result short: ${formatResult(finalResult)}`;
-          compositionResultDivLong.innerHTML = `final result long: ${longFormatResult(finalResult)}`;
+          compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
+          // compositionResultDivLong.innerHTML = `final result long: ${longFormatResult(finalResult)}`;
         }
       }
 
