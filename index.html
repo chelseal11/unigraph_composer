@@ -224,7 +224,18 @@
             }
             return result;
           },
-          distinguishingNumber: (p, q) => 1 // TODO: Implement distinguishing number for Spq
+          distinguishingNumber: (p, q) =>{
+            if (p === undefined || q === undefined) return undefined;
+            for (let c = 1; c <= 100; c++) {
+              const c_factorial = factorial(c);
+              const p_factorial = factorial(p);
+              const c_minus_p_factorial = factorial(c - p);
+              const denominator = p_factorial * c_minus_p_factorial;
+              if (denominator === 0) return;
+              const result = Math.round(c_factorial / denominator);
+              if (result >= q ) return result;
+            }
+          }
         },
         'S2': {
           split: true,
@@ -1529,8 +1540,13 @@
       function convertToDegSequence(input) {
         const result = {};
         const inputArray = input.split(', ');
+        let index = 1;
         for (let i = 0; i < inputArray.length; i++) {
-          result[i + 1] = inputArray[i];
+          const [degree, count] = inputArray[i].split('^');
+          for (let j = 0; j < count; j++) {
+            result[index] = degree;
+            index++;
+          }
         }
         return result;
       }
@@ -1981,6 +1997,15 @@
         } else {
           return [true, input];
         }
+      }
+
+      function factorial(n) {
+        if (n === 0) return 1;
+        let result = 1;
+        for (let i = 1; i <= n; i++) {
+          result *= i;
+        }
+        return result;
       }
 
       // Initialize the HTML when the page loads
