@@ -276,7 +276,7 @@
             const q = params.q;
             let max = 0;
             for (let i = 1; i <= m; i++) {
-              const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p[i], q: q[i]});
+              const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p[i], q[i]);
               max = Math.max(max, p_q);
             }
             return max;
@@ -315,8 +315,8 @@
             return result;
           },
           distinguishingNumber: (p, q1, q2) => {
-            const p_q1 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p, q: q1});
-            const p_plus_1_q2 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p + 1, q: q2});
+            const p_q1 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, q1);
+            const p_plus_1_q2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q2);
             return Math.max(p_q1, p_plus_1_q2)
           }
         },
@@ -349,8 +349,8 @@
             return results;
           },
           distinguishingNumber: (p, q) => {
-            const p_2 = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p, q: 2});
-            const p_plus_1_q = GRAPH_CONFIG['Spq'].distinguishingNumber({p: p + 1, q: q});
+            const p_2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, 2);
+            const p_plus_1_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q);
             return Math.max(p_2, p_plus_1_q)
           }
         },
