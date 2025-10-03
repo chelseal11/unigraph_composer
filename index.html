@@ -79,7 +79,7 @@
     <div id="decompose-graph" class="hidden">
       <h2>Graph Decomposition Tool</h2>
       <p>Decompose a graph into its basic components:</p>
-      <input type="text" id="decompose-graph-input" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to decompose... Example: 5, 5, 4, 4, 1">
+      <input type="text" id="decompose-graph-input" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to decompose... Example: 5^2, 4^3, 1^1">
       <br>
       <br>
       <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraph()">Decompose Graph</button>
@@ -92,7 +92,7 @@
     <div id="compose-graphs" class="hidden">
       <h2>Graph Composition Tool</h2>
       <p>Compose a graph by degree sequence:</p>
-      <input type="text" id="compose-graphs-input-1" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to compose... Example: 5, 5, 4, 4, 1">
+      <input type="text" id="compose-graphs-input-1" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to compose... Example: 5^2, 4^3, 1^1">
       <br>
       <br>
       <input type="text" id="compose-graphs-input-2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a split graph to compose... Example: 2, 1 ; 1, 1">
@@ -1389,12 +1389,16 @@
       }
 
       function convertToHashmap(component) {
+        console.log("component", component);
+
         const hashmap = {};
-        if (component == "null") {
-          return hashmap;
+
+        if (component == "") {
+          return {};
         }
 
         const degreeArray = component.split(', ');
+        console.log("degreeArray", degreeArray);
 
         for (let i = 0; i < degreeArray.length; i++) {
           const degree = degreeArray[i];
@@ -1417,6 +1421,7 @@
         const input = document.getElementById('decompose-graph-input').value;
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
+        console.log("hashComponents", hashComponents);
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
         const formattedComponents = formatComponents(minimalComponents);
@@ -1509,9 +1514,9 @@
             s.push(text)
             return s;
           } else  if ( p == 0 && q == 1) {
-            s.push("null ; 0")
+            s.push("; 0")
           } else if (p == 1 && q == 0) {
-            s.push("0; null")
+            s.push("0; ")
           } else {
             let a = j - i - p - q;
             let left = "";
