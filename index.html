@@ -95,7 +95,7 @@
       <input type="text" id="compose-graphs-input-1" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to compose... Example: 5^2, 4^3, 1^1">
       <br>
       <br>
-      <input type="text" id="compose-graphs-input-2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a split graph to compose... Example: 2, 1 ; 1, 1">
+      <input type="text" id="compose-graphs-input-2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a split graph to compose... Example: 2^1 ; 1^1">
       <br>
       <br>
       <button style="width: 250px; height: 30px; font-size: 1em;" onclick="graphComposition()">Compose Graphs</button>
@@ -774,9 +774,6 @@
       }
 
       function distinguishingNumber(uniLabel, uniType, uniParams, degreeSequence) {
-        if (uniType !== "Standard") {
-          return undefined;
-        }
         const type = GRAPH_CONFIG[uniLabel];
         if (!type) return undefined;
         switch (uniLabel) {
@@ -1389,16 +1386,12 @@
       }
 
       function convertToHashmap(component) {
-        console.log("component", component);
-
-        const hashmap = {};
-
         if (component == "") {
           return {};
         }
 
         const degreeArray = component.split(', ');
-        console.log("degreeArray", degreeArray);
+        const hashmap = {};
 
         for (let i = 0; i < degreeArray.length; i++) {
           const degree = degreeArray[i];
@@ -1421,7 +1414,6 @@
         const input = document.getElementById('decompose-graph-input').value;
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
-        console.log("hashComponents", hashComponents);
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
         const formattedComponents = formatComponents(minimalComponents);
@@ -1587,32 +1579,27 @@
         }
       }
 
-      function convertStringtoHashmap(input) {
-        let hashmap = {};
-        let strippedInput = input.replace(/ /g, '');
-        if (input.includes(';')) {
-          const left = strippedInput.split(';')[0];
-          const right = strippedInput.split(';')[1];
-          hashmap = {A: convertStringtoHashmap(left), B: convertStringtoHashmap(right)};
+      function convertStringToHashmap(input) {
+        if (input.includes('; ')) {
+          const left = input.split('; ')[0];
+          const right = input.split('; ')[1];
+          return {A: convertStringToHashmap(left), B: convertStringToHashmap(right)};
         } else {
-          const inputArray = strippedInput.split(',');
+          const inputArray = input.split(', ');
+          const hashmap = {};
           for (let i = 0; i < inputArray.length; i++) {
-            const degree = inputArray[i];
-            if (hashmap[degree] === undefined) {
-              hashmap[degree] = 1;
-            } else {
-              hashmap[degree]++;
-            }
+            const [degree, count] = inputArray[i].split('^');
+            hashmap[degree] = Number(count);
           }
+          return hashmap;
         }
-        return hashmap;
       }
 
       function graphComposition() {
         const input1 = document.getElementById('compose-graphs-input-1').value;
         const input2 = document.getElementById('compose-graphs-input-2').value;
-        const degSequence1 = convertStringtoHashmap(input1);
-        const degSequence2 = convertStringtoHashmap(input2);
+        const degSequence1 = convertStringToHashmap(input1);
+        const degSequence2 = convertStringToHashmap(input2);
         const result = compose(degSequence1, degSequence2);
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
