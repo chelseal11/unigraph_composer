@@ -275,11 +275,10 @@
           potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices)),
           distinguishingNumber: (params) => {
-            const m = params.m;
             const p = params.p;
             const q = params.q;
             let max = 0;
-            for (let i = 1; i <= m; i++) {
+            for (let i = 1; i <= p.length -1; i++) {
               const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p[i], q[i]);
               max = Math.max(max, p_q);
             }
@@ -333,7 +332,7 @@
           ],
           degSequence: ({p, q}) => ({
             A: {
-              [2 * (p + q + 1) + q]: 1,
+              [(2 * (p + q + 1)) + (q * p)]: 1,
               [p + q + 3]: q + 2
             },
             B: {2: (q * p) + (2 * p) + q + 1}
@@ -1948,6 +1947,7 @@
       }
 
       function isS4(input) {
+        console.log("input", input);
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -1972,7 +1972,7 @@
         if (p < 1 || q < 1) {
           return [false, "None"];
         }
-        if (d1 !== 2 * (p + q + 1) + q || r3 !== (q * p) + (2 * p) + q + 1) {
+        if (d1 !== ((2 * (p + q + 1)) + (q * p)) || r3 !== (q * p) + (2 * p) + q + 1) {
           return [false, "None"];
         }
         return [true, {p: p, q: q}];
