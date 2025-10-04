@@ -85,7 +85,11 @@
       <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraph()">Decompose Graph</button>
       <br>
       <br>
-      <div id="decompose-graph-result" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+      <div id="decompose-graph-result-unigraph" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+      <br>
+      <div id="decompose-graph-result-compacted" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+      <br>
+      <div id="decompose-graph-result-full" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
       <br>
     </div>
 
@@ -717,7 +721,7 @@
             // Apply transformation
             degreeSequence = applyTransformation(degreeSequence, transformationType, graphType);
             if (degreeSequence) {
-              const text = generateText(degreeSequence);
+              const [text, isGraphUnigraph, distinguishingNumberResult] = generateText(degreeSequence);
               displayDiv.innerHTML = text;
             } else {
               displayDiv.innerHTML = "";
@@ -734,15 +738,16 @@
 
       function generateText(degreeSequence) {
         const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
-        let degreeSequenceText = formatResult(newDegreeSequence || degreeSequence);
+        const degreeSequenceText = "Degree Sequence: " + formatResult(newDegreeSequence || degreeSequence) + "<br>";
         const hasCompactedParam = uniParams.compacted !== undefined;
         const isCompacted = hasCompactedParam && uniParams.compacted;
         const paramsString = paramsText(uniParams);
         const hasParams = paramsString != "";
         const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams, newDegreeSequence);
         const hasDistinguishingNumber = distinguishingNumberResult !== undefined;
+        const distinguishingNumberString = hasDistinguishingNumber ? "Distinguishing Number: " + distinguishingNumberResult + "<br>" : "";
         const typeString = typeText(uniType, uniLabel, isCompacted);
-        return `${typeString}${paramsString}Degree Sequence: ${degreeSequenceText}<br>${hasDistinguishingNumber ? `Distinguishing Number: ${distinguishingNumberResult}` : ""}`;
+        return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
       }
 
       function typeText(uniType, uniLabel, isCompacted) {
@@ -1385,15 +1390,20 @@
 
       function formatComponents(components) {
         let result = "";
+        let isUnigraph = true;
+        let distinguishingNumber = 0;
         let index = 1;
         components.forEach(component => {
-          result += `Component ${index}:<br>${generateText(component)}`;
+          const [text, isGraphUnigraph, distinguishingNumberResult] = generateText(component);
+          isUnigraph = isUnigraph && isGraphUnigraph;
+          distinguishingNumber = Math.max(distinguishingNumber, distinguishingNumberResult);
+          result += `Component ${index}:<br>${text}`;
           if (index < components.length) {
             result += "<br><br>";
           }
           index++;
         });
-        return result;
+        return [result, isUnigraph, distinguishingNumber];
       }
 
       function convertToHashmap(component) {
@@ -1427,8 +1437,11 @@
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
-        const formattedComponents = formatComponents(minimalComponents);
-        document.getElementById('decompose-graph-result').innerHTML = formattedComponents;
+        const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
+        const [reversedHashComponentsText, reversedHashComponentsIsUnigraph, reversedHashComponentsDistinguishingNumber] = formatComponents(reversedHashComponents);
+        document.getElementById('decompose-graph-result-compacted').innerHTML = "Compacted components: <br><br>" + minimalComponentsText;
+        document.getElementById('decompose-graph-result-full').innerHTML = "Components: <br><br>" + reversedHashComponentsText;
+        document.getElementById('decompose-graph-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>Distinguishing number: " + minimalComponentsDistinguishingNumber;
       }
 
       function minimalDecompose(hashComponents) {
@@ -1443,16 +1456,18 @@
             const previousType = previous[1];
             if (currentType == "SVG" && previousType == "SVG" ) {
               if (index === 1) {
-                combinedComponents.push(combineSVGs(previousComponent, component));
-              }
-              const currentParams = current[3];
-              const previousParams = previous[3];
-              if (currentParams.partition == previousParams.partition) {
-                const previousCombinedComponent = combinedComponents[combinedComponents.length - 1];
-                const combined = combineSVGs(previousCombinedComponent, component);
+                const combined = combineSVGs(previousComponent, component);
                 combinedComponents[combinedComponents.length - 1] = combined;
               } else {
-                combinedComponents.push(component);
+                const currentParams = current[3];
+                const previousParams = previous[3];
+                if (currentParams.partition == previousParams.partition) {
+                  const previousCombinedComponent = combinedComponents[combinedComponents.length - 1];
+                  const combined = combineSVGs(previousCombinedComponent, component);
+                  combinedComponents[combinedComponents.length - 1] = combined;
+                } else {
+                  combinedComponents.push(component);
+                }
               }
             } else {
               combinedComponents.push(component);
@@ -1465,29 +1480,40 @@
       }
 
       function combineSVGs(firstComponent, secondComponent) {
-        if (firstComponent.A !== undefined && secondComponent.A !== undefined) {
-          const firstA = firstComponent.A;
-          if (Object.keys(firstA).length !== 1) {
+        const firstA = firstComponent.A;
+        const firstB = firstComponent.B;
+        const secondA = secondComponent.A;
+        const secondB = secondComponent.B;
+        const firstAKeys = Object.keys(firstA);
+        const firstBKeys = Object.keys(firstB);
+        const secondAKeys = Object.keys(secondA);
+        const secondBKeys = Object.keys(secondB);
+        // both in A
+        if (firstAKeys.length !== 0 && secondAKeys.length !== 0) {
+          if (firstAKeys.length !== 1) {
             return null;
           }
-          const firstNumDegrees = Object.keys(firstA)[0];
+          const firstNumDegrees = firstAKeys[0];
           const firstNumVertices = Object.values(firstA)[0];
           const newComponent = {A: {[Number(firstNumDegrees) + 1]: firstNumVertices + 1}, B: {}};
           return newComponent;
         }
-        if (firstComponent.B !== undefined && secondComponent.B !== undefined) {
-          if (Object.keys(firstB).length !== 1) {
+        // both in B
+        if (firstBKeys.length !== 0 && secondBKeys.length !== 0) {
+          if (firstBKeys.length !== 1) {
             return null;
           }
-          const firstNumDegrees = Object.keys(firstB)[0];
+          const firstNumDegrees = firstBKeys[0];
           const firstNumVertices = Object.values(firstB)[0];
           const newComponent = {A: {}, B: {0: Number(firstNumVertices) + 1}};
           return newComponent;
         }
-        if (firstComponent.A !== undefined && secondComponent.B !== undefined) {
+        // first in A, second in B
+        if (firstAKeys.length !== 0 && secondBKeys.length !== 0) {
           return {A: {}, B: {0: 2}};
         }
-        if (firstComponent.B !== undefined && secondComponent.A !== undefined) {
+        // first in B, second in A
+        if (firstBKeys.length !== 0 && secondAKeys.length !== 0) {
           return {A: {1: 2}, B: {}};
         }
       }
@@ -1500,7 +1526,7 @@
         let s = [];
         while (i < j) {
           if (j - i == 1) {
-            s.push("0");
+            s.push("; 0");
             return s;
           }
           const bestPair = findBestPair(d, i, j, b);
