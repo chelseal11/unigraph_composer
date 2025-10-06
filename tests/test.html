@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Unigraph Composer - Tests</title>
+    <link rel="stylesheet" href="https://unpkg.com/mocha@10.2.0/mocha.css">
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+      iframe { width: 0; height: 0; border: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <iframe id="app" src="../index.html" title="App Under Test"></iframe>
+
+    <script src="https://unpkg.com/mocha@10.2.0/mocha.js"></script>
+    <script src="https://unpkg.com/chai@4.3.10/chai.js"></script>
+    <script>
+      (function ensureMocha() {
+        if (typeof mocha === 'undefined') {
+          const pre = document.createElement('pre');
+          pre.textContent = 'Failed to load Mocha from CDN. Check your network and refresh.';
+          document.body.insertBefore(pre, document.getElementById('mocha'));
+          throw new Error('Mocha not loaded');
+        }
+      })();
+
+      mocha.setup('bdd');
+      const expect = chai.expect;
+
+      const appIframe = document.getElementById('app');
+      appIframe.addEventListener('load', function () {
+        const app = appIframe.contentWindow;
+        const getFn = (name) => {
+          try { return app.eval(name); } catch (e) { return undefined; }
+        };
+        const formatHashmap = getFn('formatHashmap');
+        const formatResult = getFn('formatResult');
+        const calculateComplement = getFn('calculateComplement');
+        const compose = getFn('compose');
+        const calculateInverse = getFn('calculateInverse');
+        const invertA = getFn('invertA');
+        const invertB = getFn('invertB');
+        const calculateSizeOfHA = getFn('calculateSizeOfHA');
+        const calculateSizeOfGraph = getFn('calculateSizeOfGraph');
+        const composeG = getFn('composeG');
+        const composeH = getFn('composeH');
+        const combinedGraphs = getFn('combinedGraphs');
+        const combineGraphs = getFn('combineGraphs');
+        const composeGraphs = getFn('composeGraphs');
+        const longFormatResult = getFn('longFormatResult');
+        const convertToHashmap = getFn('convertToHashmap');
+        const convertGraphToHashmap = getFn('convertGraphToHashmap');
+        const convertToDegSequence = getFn('convertToDegSequence');
+        const convertStringToHashmap = getFn('convertStringToHashmap');
+        const findBestPair = getFn('findBestPair');
+        const decompose = getFn('decompose');
+        const isSplitGraph = getFn('isSplitGraph');
+        const isComponent = getFn('isComponent');
+        const isSVG = getFn('isSVG');
+        const isSpq = getFn('isSpq');
+        const isS2 = getFn('isS2');
+        const isS3 = getFn('isS3');
+        const isS4 = getFn('isS4');
+        const ismK2 = getFn('ismK2');
+        const isU2 = getFn('isU2');
+        const isU3 = getFn('isU3');
+        const isC5 = getFn('isC5');
+        const applyTransformation = getFn('applyTransformation');
+        const factorial = getFn('factorial');
+
+        // Expose a simple console runner: runTests()
+        // Usage: open DevTools on this page and run `runTests()`
+        window.runTests = function runTests() {
+          const results = [];
+          let passed = 0;
+          let failed = 0;
+
+          function deepEqual(a, b) {
+            return JSON.stringify(a) === JSON.stringify(b);
+          }
+
+          function record(name, fn) {
+            try {
+              fn();
+              console.log('PASS:', name);
+              results.push({ name, pass: true });
+              passed++;
+            } catch (err) {
+              console.error('FAIL:', name, err);
+              results.push({ name, pass: false, error: String(err && err.message || err) });
+              failed++;
+            }
+          }
+
+          // Availability checks
+          record('api: formatHashmap available', () => {
+            if (typeof formatHashmap !== 'function') throw new Error('formatHashmap not found');
+          });
+          record('api: formatResult available', () => {
+            if (typeof formatResult !== 'function') throw new Error('formatResult not found');
+          });
+          record('api: calculateComplement available', () => {
+            if (typeof calculateComplement !== 'function') throw new Error('calculateComplement not found');
+          });
+          record('api: compose available', () => {
+            if (typeof compose !== 'function') throw new Error('compose not found');
+          });
+
+          // Behavior checks
+          record('formatHashmap: sorts and formats', () => {
+            const res = formatHashmap({ 2: 5, 1: 3 });
+            if (res !== '2^5 , 1^3 ') throw new Error(`got ${res}`);
+          });
+
+          record('formatResult: non-split formatting', () => {
+            const res = formatResult({ 3: 1, 1: 2 });
+            if (res !== '3^1 , 1^2 ') throw new Error(`got ${res}`);
+          });
+
+          record('formatResult: split formatting', () => {
+            const res = formatResult({ A: { 1: 2 }, B: { 0: 3 } });
+            if (res !== '1^2 ; 0^3 ') throw new Error(`got ${res}`);
+          });
+
+          record('calculateComplement: non-split complement', () => {
+            const comp = calculateComplement({ 2: 1, 1: 2 });
+            if (!deepEqual(comp, { 0: 1, 1: 2 })) throw new Error(`got ${JSON.stringify(comp)}`);
+          });
+
+          record('calculateComplement: split complement', () => {
+            const comp = calculateComplement({ A: { 2: 2 }, B: { 1: 2 } });
+            if (!deepEqual(comp, { A: { 2: 2 }, B: { 1: 2 } })) throw new Error(`got ${JSON.stringify(comp)}`);
+          });
+
+          record('compose: basic composition', () => {
+            const out = compose({ 2: 1 }, { 1: 2 });
+            if (!deepEqual(out, { 4: 1, 2: 2 })) throw new Error(`got ${JSON.stringify(out)}`);
+          });
+
+          const summary = { passed, failed, total: passed + failed, results };
+          console.log('Test summary:', summary);
+          return summary;
+        };
+
+        describe('Global API availability', function () {
+          it('exposes core functions on the app window', function () {
+            expect(formatHashmap).to.be.a('function');
+            expect(formatResult).to.be.a('function');
+            expect(calculateComplement).to.be.a('function');
+            expect(compose).to.be.a('function');
+          });
+        });
+
+        describe('formatHashmap', function () {
+          it('formats a simple degree sequence in descending key order', function () {
+            const input = { 2: 5, 1: 3 };
+            const result = formatHashmap(input);
+            expect(result).to.equal('2^5 , 1^3 ');
+          });
+        });
+
+        describe('formatResult', function () {
+          it('formats a simple (non-split) sequence', function () {
+            const input = { 3: 1, 1: 2 };
+            const result = formatResult(input);
+            expect(result).to.equal('3^1 , 1^2 ');
+          });
+
+          it('formats a split graph with A and B partitions', function () {
+            const input = { A: { 1: 2 }, B: { 0: 3 } };
+            const result = formatResult(input);
+            expect(result).to.equal('1^2 ; 0^3 ');
+          });
+        });
+
+        describe('calculateComplement', function () {
+          it('computes complement for a non-split sequence', function () {
+            const g = { 2: 1, 1: 2 }; // n = 3 -> newDegree = n - k - 1
+            const complement = calculateComplement(g);
+            expect(complement).to.deep.equal({ 0: 1, 1: 2 });
+          });
+
+          it('computes complement for a valid split sequence', function () {
+            // Example: S(p=1,q=2) -> A:{2:2}, B:{1:2}, n=4
+            const g = { A: { 2: 2 }, B: { 1: 2 } };
+            const complement = calculateComplement(g);
+            expect(complement).to.deep.equal({ A: { 2: 2 }, B: { 1: 2 } });
+          });
+        });
+
+        describe('compose', function () {
+          it('composes two non-split graphs deterministically', function () {
+            const g = { 2: 1 }; // one vertex of deg 2
+            const h = {A: {1: 2}, B: {}}; // two vertices of deg 1
+            const composed = compose(g, h);
+            // composeG shifts g by |h|_A (== |h| for non-split) = 2 -> {4:1}
+            // composeH shifts h.A by |g| = 1 and keeps h.B (none) -> {2:2}
+            // combinedGraphs merges: {4:1} + {2:2}
+            expect(composed).to.deep.equal({ 4: 1, 2: 2 });
+          });
+        });
+
+        describe('size calculators and inverse', function () {
+          it('calculates sizes for split and non-split graphs', function () {
+            const h = { A: { 1: 2 }, B: { 0: 1 } };
+            expect(calculateSizeOfHA(h)).to.equal(2);
+            expect(calculateSizeOfGraph(h)).to.equal(3);
+            const g = { 2: 1, 1: 2 };
+            expect(calculateSizeOfGraph(g)).to.equal(3);
+          });
+
+          it('inverts A and B partitions and whole split graph', function () {
+            const A = { 2: 2 }; // |A|=2 => sizeOfA-1 = 1, shift down by 1
+            const B = { 1: 2 }; // |B|=2 => sizeOfB-1 = 1, shift up by 1
+            expect(invertA(A)).to.deep.equal({ 1: 2 });
+            expect(invertB(B)).to.deep.equal({ 2: 2 });
+            const inv = calculateInverse({ A, B });
+            expect(inv).to.deep.equal({ A: { 2: 2 }, B: { 1: 2 } });
+          });
+        });
+
+        describe('compose helpers', function () {
+          it('composeG shifts g by |h|_A', function () {
+            const g = { 2: 1 };
+            const h = { A: { 1: 2 }, B: {} };
+            expect(composeG(g, h)).to.deep.equal({ 4: 1 });
+          });
+
+          it('composeH shifts h.A by |g| and keeps h.B degrees', function () {
+            const g = { 2: 1 };
+            const h = { A: { 1: 2 }, B: {} };
+            expect(composeH(g, h)).to.deep.equal({ A: { 2: 2 }, B: {} });
+          });
+
+          it('combinedGraphs and combineGraphs merge counts', function () {
+            const gShifted = { 4: 1 };
+            const hShifted = { A: { 2: 2 }, B: {} };
+            expect(combinedGraphs(gShifted, hShifted)).to.deep.equal({ 4: 1, 2: 2 });
+            expect(combineGraphs([{ 2: 1 }, { 2: 3 }, { 0: 2 }])).to.deep.equal({ 2: 4, 0: 2 });
+          });
+
+          it('composeGraphs composes three graphs sequentially', function () {
+            const g1 = { 1: 2 };
+            const h1 = { A: { 1: 2 }, B: {} };
+            const h2 = { A: {}, B: { 0: 1 } };
+            const out = composeGraphs([g1, h1, h2]);
+            expect(out).to.deep.equal({ 3: 4, 0: 1 });
+          });
+        });
+
+        describe('formatting and conversion utilities', function () {
+          it('longFormatResult lists degrees expanded (non-split)', function () {
+            const s = longFormatResult({ 3: 1, 1: 2 });
+            expect(s).to.equal('3, 1, 1');
+          });
+
+          it('converts comma lists to hashmap and split graphs', function () {
+            expect(convertToHashmap('3, 1, 1')).to.deep.equal({ 3: 1, 1: 2 });
+            expect(convertGraphToHashmap('1, 1; 0')).to.deep.equal({ A: { 1: 2 }, B: { 0: 1 } });
+          });
+
+          it('parses degree^count strings to hashmaps and sequences', function () {
+            expect(convertStringToHashmap('3^1, 1^2')).to.deep.equal({ 3: 1, 1: 2 });
+            const seq = convertToDegSequence('3^1, 1^2');
+            expect(seq).to.deep.equal({ 1: '3', 2: '1', 3: '1' });
+          });
+        });
+
+        describe('component detectors', function () {
+          it('detects split graphs and partitions them', function () {
+            const res = isSplitGraph({ 2: 1, 1: 2 });
+            expect(res[0]).to.equal(true);
+            expect(res[1]).to.deep.equal({ A: { 2: 1, 1: 1 }, B: { 1: 1 } });
+          });
+
+          it('detects SVG in A and B partitions', function () {
+            expect(isSVG({ A: { 0: 1 }, B: {} })[0]).to.equal(true);
+            expect(isSVG({ A: {}, B: { 0: 1 } })[0]).to.equal(true);
+          });
+
+          it('detects Spq, S2, S3, S4 split families', function () {
+            expect(isSpq({ A: { 2: 2 }, B: { 1: 2 } })).to.deep.equal([true, { p: 1, q: 2 }]);
+            expect(isS2({ A: { 3: 1, 2: 1 }, B: { 1: 3 } })[0]).to.equal(true);
+            expect(isS3({ A: { 4: 3 }, B: { 2: 1, 1: 4 } })[0]).to.equal(true);
+            expect(isS4({ A: { 7: 1, 5: 3 }, B: { 2: 5 } })[0]).to.equal(true);
+          });
+
+          it('detects non-split families C5, mK2, U2, U3', function () {
+            expect(isC5({ 2: 5 })[0]).to.equal(true);
+            expect(ismK2({ 1: 4 })).to.deep.equal([true, { m: 2 }]);
+            expect(isU2({ 3: 1, 1: 5 })).to.deep.equal([true, { l: 3, m: 1 }]);
+            expect(isU3({ 4: 1, 2: 5 })[0]).to.equal(true);
+          });
+
+          it('summarizes components via isComponent', function () {
+            const g = { A: { 2: 2 }, B: { 1: 2 } };
+            const res = isComponent(g);
+            expect(res[0]).to.equal(true);
+            expect(res[1]).to.equal('Spq');
+            expect(res[2]).to.equal('Standard');
+            expect(res[3]).to.deep.equal({ p: 1, q: 2 });
+            expect(res[4]).to.deep.equal(g);
+          });
+        });
+
+        describe('algorithms and utilities', function () {
+          it('applyTransformation works for inverse/complement/inverseComplement', function () {
+            const g = { A: { 2: 2 }, B: { 1: 2 } };
+            // inverse is identical for this symmetric example
+            expect(applyTransformation(g, 'inverse')).to.deep.equal(g);
+            expect(applyTransformation(g, 'complement')).to.deep.equal({ A: { 2: 2 }, B: { 1: 2 } });
+            expect(applyTransformation(g, 'inverseComplement')).to.deep.equal({ A: { 2: 2 }, B: { 1: 2 } });
+          });
+
+          it('findBestPair handles edge conditions', function () {
+            expect(findBestPair({ 1: 1, 2: 0 }, 0, 2, 0)).to.deep.equal([0, 1]);
+            expect(findBestPair({ 1: 1, 2: 1 }, 0, 2, 0)).to.deep.equal([1, 0]);
+          });
+
+          it('factorial computes correctly', function () {
+            expect(factorial(0)).to.equal(1);
+            expect(factorial(5)).to.equal(120);
+          });
+        });
+
+        // Keep Mocha UI available if you want to run visually
+        try { mocha.run(); } catch (e) { /* ignore in console-only usage */ }
+      });
+    </script>
+  </body>
+  </html>
+
+

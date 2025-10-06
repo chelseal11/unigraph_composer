@@ -1140,6 +1140,10 @@
       }
 
       function compose(g, h) {
+        if (h.A === undefined || h.B === undefined) {
+          alert("h is not split");
+          return undefined;
+        }
         const composedG = composeG(g, h);
         const composedH = composeH(g, h);
 
@@ -1947,7 +1951,6 @@
       }
 
       function isS4(input) {
-        console.log("input", input);
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
