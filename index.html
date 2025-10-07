@@ -1425,6 +1425,9 @@
       }
 
       function convertGraphToHashmap(component) {
+        if (component == "0") {
+          return {0: 1};
+        }
         if (component.includes('; ')) {
           const left = component.split('; ')[0];
           const right = component.split('; ')[1];
@@ -1620,15 +1623,25 @@
       }
 
       function convertStringToHashmap(input) {
-        if (input.includes('; ')) {
-          const left = input.split('; ')[0];
-          const right = input.split('; ')[1];
+        if (input.includes(';')) {
+          const strippedInput = input.replace(' ', '');
+          const left = strippedInput.split(';')[0];
+          const right = strippedInput.split(';')[1];
           return {A: convertStringToHashmap(left), B: convertStringToHashmap(right)};
         } else {
+          if (input == "" || input == null || input == undefined || input == " ") {
+            return {};
+          }
           const inputArray = input.split(', ');
           const hashmap = {};
           for (let i = 0; i < inputArray.length; i++) {
+            if (inputArray[i] == "0") {
+              return {0: 1};
+            }
             const [degree, count] = inputArray[i].split('^');
+            if (degree == "" || degree == "null" || degree == undefined || degree == " " || degree == null) {
+              return {0: count};
+            }
             hashmap[degree] = Number(count);
           }
           return hashmap;
