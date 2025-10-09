@@ -121,7 +121,8 @@
           degSequence: () => ({2: 5}),
           potentialVertices: [5],
           potentialParamsByNumVertices: (numVertices) => ([{}]),
-          distinguishingNumber: () => 3
+          distinguishingNumber: () => 3,
+          fixingNumber: () => 2
         },
         'mK2': {
           inputs: ['m'],
@@ -133,6 +134,9 @@
           ),
           distinguishingNumber: (m) => {
             return (Math.ceil((1 + Math.sqrt(1 + 8*m)) / 2))
+          },
+          fixingNumber: (m) => {
+            return m;
           }
         },
         'U2': {
@@ -160,6 +164,9 @@
           },
           distinguishingNumber: (m, l) => {
             return Math.ceil(GRAPH_CONFIG['mK2'].distinguishingNumber(m), l)
+          },
+          fixingNumber: (m, l) => {
+            return m + l - 1;
           }
         },
         'U3': {
@@ -173,7 +180,10 @@
           potentialParamsByNumVertices: (numVertices) => {
             return [{m: (numVertices - 4) / 2}];
           },
-          distinguishingNumber: (m) => (GRAPH_CONFIG['mK2'].distinguishingNumber(m))
+          distinguishingNumber: (m) => (GRAPH_CONFIG['mK2'].distinguishingNumber(m)),
+          fixingNumber: (m) => {
+            return m + 1;
+          }
         },
         'SVG': {
           split: true,
@@ -201,7 +211,8 @@
             const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
             const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
             return aTotalVertices + bTotalVertices;
-          }
+          },
+          fixingNumber: () => 1
         },
         'Spq': {
           split: true,
@@ -239,6 +250,9 @@
               const result = Math.round(c_factorial / denominator);
               if (result >= q ) return result;
             }
+          },
+          fixingNumber: (p, q) => {
+            return p == 1 ? q - 1 : q * (p - 1);
           }
         },
         'S2': {
@@ -283,6 +297,16 @@
               max = Math.max(max, p_q);
             }
             return max;
+          },
+          fixingNumber: (params) => {
+            const m = params.p.length - 1;
+            const sum = 0;
+            for (let i = 0; i <= m; i++) {
+              const p = params.p[i];
+              const q = params.q[i];
+              sum += GRAPH_CONFIG['Spq'].fixingNumber(p, q);
+            }
+            return sum;
           }
         },
         'S3': {
@@ -321,6 +345,9 @@
             const p_q1 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, q1);
             const p_plus_1_q2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q2);
             return Math.max(p_q1, p_plus_1_q2)
+          },
+          fixingNumber: (p, q1, q2) => {
+            return GRAPH_CONFIG['Spq'].fixingNumber(p, q1) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q2);
           }
         },
         'S4': {
@@ -355,6 +382,9 @@
             const p_2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, 2);
             const p_plus_1_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q);
             return Math.max(p_2, p_plus_1_q)
+          },
+          fixingNumber: (p, q) => {
+            return GRAPH_CONFIG['Spq'].fixingNumber(p, 2) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q);
           }
         },
         'PreviousResult': {
