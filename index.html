@@ -1344,6 +1344,10 @@
 
       function decomposeGraphV2() {
         const input = document.getElementById('decompose-graph-input-v2').value;
+        if (!isValidDegreeSequence(input)) {
+          alert("Invalid degree sequence");
+          return;
+        }
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
@@ -1351,7 +1355,8 @@
         const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
         const [reversedHashComponentsText] = formatComponents(reversedHashComponents);
         document.getElementById('decompose-graph-v2-result-compacted').innerHTML = "Compacted components: <br><br>" + minimalComponentsText;
-        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>Distinguishing number: " + minimalComponentsDistinguishingNumber;
+        const distinguishingNumberText = minimalComponentsIsUnigraph ? "Distinguishing number: " + minimalComponentsDistinguishingNumber : "";
+        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>" + distinguishingNumberText;
       }
 
       function showComposeGraphs() {
@@ -1568,6 +1573,10 @@
 
       function decomposeGraph() {
         const input = document.getElementById('decompose-graph-input').value;
+        if (!isValidDegreeSequence(input)) {
+          alert("Invalid degree sequence");
+          return;
+        }
         const components = decompose(input);
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
@@ -1779,6 +1788,10 @@
       function graphComposition() {
         const input1 = document.getElementById('compose-graphs-input-1').value;
         const input2 = document.getElementById('compose-graphs-input-2').value;
+        if (!isValidDegreeSequence(input1) || !isValidDegreeSequence(input2)) {
+          alert("Invalid degree sequence");
+          return;
+        }
         const degSequence1 = convertStringToHashmap(input1);
         const degSequence2 = convertStringToHashmap(input2);
         const result = compose(degSequence1, degSequence2);
@@ -2179,6 +2192,40 @@
           result *= i;
         }
         return result;
+      }
+
+      function isValidDegreeSequence(input) {
+        console.log("input", input);
+        if (input.includes(';')) {
+          const strippedInput = input.replaceAll(' ', '');
+          const [left, right] = strippedInput.split(';');
+          return isValidDegreeSequence(left) && isValidDegreeSequence(right);
+        }
+        const degreeSequence = convertToDegSequence(input);
+        const degreeSequenceKeys = Object.keys(degreeSequence);
+        const degreeSequenceValues = Object.values(degreeSequence);
+        if (degreeSequenceKeys.length !== degreeSequenceValues.length) return false;
+        let inputArray = [];
+        for (let i = 0; i < degreeSequenceKeys.length; i++) {
+          inputArray.push(Number(degreeSequenceValues[i]));
+        }
+        inputArray.sort((a, b) => b - a);
+        if (satifiesHavelHakimi(inputArray)) return true;
+        return false;
+      }
+
+      function satifiesHavelHakimi(input) {
+        let inputArray = input;
+        while (inputArray.length > 0) {
+          const first = inputArray[0];
+          inputArray = inputArray.slice(1, inputArray.length);
+          if (first > inputArray.length) return false;
+          for (let i = 0; i < first; i++) {
+            inputArray[i]--;
+          }
+          inputArray.sort((a, b) => b - a);
+        }
+        return true;
       }
 
       // Initialize the HTML when the page loads
