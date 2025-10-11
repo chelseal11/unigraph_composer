@@ -252,7 +252,8 @@
             }
           },
           fixingNumber: (p, q) => {
-            return p == 1 ? q - 1 : q * (p - 1);
+            const result = p == 1 ? q - 1 : q * (p - 1);
+            return result;
           }
         },
         'S2': {
@@ -299,9 +300,8 @@
             return max;
           },
           fixingNumber: (params) => {
-            const m = params.p.length - 1;
-            const sum = 0;
-            for (let i = 0; i <= m; i++) {
+            let sum = 0;
+            for (let i = 1; i < params.p.length; i++) {
               const p = params.p[i];
               const q = params.q[i];
               sum += GRAPH_CONFIG['Spq'].fixingNumber(p, q);
@@ -776,7 +776,37 @@
         const hasDistinguishingNumber = distinguishingNumberResult !== undefined;
         const distinguishingNumberString = hasDistinguishingNumber ? "Distinguishing Number: " + distinguishingNumberResult + "<br>" : "";
         const typeString = typeText(uniType, uniLabel, isCompacted);
-        return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
+        const fixingNumberResult = fixingNumber(uniLabel, uniType, uniParams, newDegreeSequence);
+        const hasFixingNumber = fixingNumberResult !== undefined;
+        const fixingNumberString = hasFixingNumber ? "Fixing Number: " + fixingNumberResult + "<br>" : "";
+        return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}${fixingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
+      }
+
+      function fixingNumber(uniLabel, uniType, uniParams, degreeSequence) {
+        const type = GRAPH_CONFIG[uniLabel];
+        if (!type) return undefined;
+        switch (uniLabel) {
+          case 'C5':
+            return GRAPH_CONFIG[uniLabel].fixingNumber();
+          case 'mK2':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.m);
+          case 'U2':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.m, uniParams.l);
+          case 'U3':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.m);
+          case 'Spq':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.p, uniParams.q);
+          case 'S2':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams);
+          case 'S3':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.p, uniParams.q1, uniParams.q2);
+          case 'S4':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(uniParams.p, uniParams.q);
+          case 'SVG':
+            return GRAPH_CONFIG[uniLabel].fixingNumber(degreeSequence);
+          default:
+            return undefined;
+        }
       }
 
       function typeText(uniType, uniLabel, isCompacted) {
