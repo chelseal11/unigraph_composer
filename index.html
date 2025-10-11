@@ -1654,7 +1654,7 @@
 
       function convertStringToHashmap(input) {
         if (input.includes(';')) {
-          const strippedInput = input.replace(' ', '');
+          const strippedInput = input.replaceAll(' ', '');
           const left = strippedInput.split(';')[0];
           const right = strippedInput.split(';')[1];
           return {A: convertStringToHashmap(left), B: convertStringToHashmap(right)};
@@ -1668,9 +1668,9 @@
             if (inputArray[i] == "0") {
               return {0: 1};
             }
-            const [degree, count] = inputArray[i].split('^');
+            let [degree, count] = inputArray[i].split('^');
             if (degree == "" || degree == "null" || degree == undefined || degree == " " || degree == null) {
-              return {0: count};
+              degree = 0;
             }
             hashmap[degree] = Number(count);
           }
@@ -1683,6 +1683,8 @@
         const input2 = document.getElementById('compose-graphs-input-2').value;
         const degSequence1 = convertStringToHashmap(input1);
         const degSequence2 = convertStringToHashmap(input2);
+        console.log("degSequence1", degSequence1);
+        console.log("degSequence2", degSequence2);
         const result = compose(degSequence1, degSequence2);
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
