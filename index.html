@@ -33,6 +33,7 @@
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
       <button onclick="showDecompose()">Graph Decomposition and Unigraph Detection Tool</button>
+      <button onclick="showDecomposeV2()">Graph Decomposition v2</button>
       <button onclick="showComposeGraphs()">Compose Graphs</button>
     </div>
 
@@ -87,9 +88,23 @@
       <br>
       <div id="decompose-graph-result-unigraph" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
       <br>
-      <div id="decompose-graph-result-compacted" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
-      <br>
+      <!-- compacted output intentionally removed in v1 -->
       <div id="decompose-graph-result-full" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+      <br>
+    </div>
+
+    <div id="decompose-graph-v2" class="hidden">
+      <h2>Graph Decomposition v2</h2>
+      <p>Decompose a graph into its basic components (with distinguishing number, fixing number, and compact version):</p>
+      <input type="text" id="decompose-graph-input-v2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to decompose... Example: 5^2, 4^3, 1^1">
+      <br>
+      <br>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraphV2()">Decompose Graph (v2)</button>
+      <br>
+      <br>
+      <div id="decompose-graph-v2-result-unigraph" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph (v2)' to see the result here..."></div>
+      <br>
+      <div id="decompose-graph-v2-result-compacted" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph (v2)' to see the result here..."></div>
       <br>
     </div>
 
@@ -782,6 +797,17 @@
         return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}${fixingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
       }
 
+      // Basic version for v1: no distinguishing/fixing numbers
+      function generateTextBasic(degreeSequence) {
+        const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
+        const degreeSequenceText = "Degree Sequence: " + formatResult(newDegreeSequence || degreeSequence) + "<br>";
+        const hasCompactedParam = uniParams.compacted !== undefined;
+        const isCompacted = hasCompactedParam && uniParams.compacted;
+        const paramsString = paramsText(uniParams);
+        const typeString = typeText(uniType, uniLabel, isCompacted);
+        return [`${typeString}${paramsString}${degreeSequenceText}`, isGraphUnigraph];
+      }
+
       function fixingNumber(uniLabel, uniType, uniParams, degreeSequence) {
         const type = GRAPH_CONFIG[uniLabel];
         if (!type) return undefined;
@@ -1286,6 +1312,8 @@
       function showComposeUnigraphs() {
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
+        const v2 = document.getElementById('decompose-graph-v2');
+        if (v2) v2.classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('compose-unigraphs').classList.remove('hidden');
       }
@@ -1302,12 +1330,36 @@
         document.getElementById('random-unigraph-generator').classList. add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.remove('hidden');
+        const v2 = document.getElementById('decompose-graph-v2');
+        if (v2) v2.classList.add('hidden');
+      }
+
+      function showDecomposeV2() {
+        document.getElementById('compose-unigraphs').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList.add('hidden');
+        document.getElementById('compose-graphs').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.remove('hidden');
+      }
+
+      function decomposeGraphV2() {
+        const input = document.getElementById('decompose-graph-input-v2').value;
+        const components = decompose(input);
+        const hashComponents = components.map(component => convertGraphToHashmap(component));
+        const reversedHashComponents = hashComponents.reverse();
+        const minimalComponents = minimalDecompose(reversedHashComponents);
+        const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
+        const [reversedHashComponentsText] = formatComponents(reversedHashComponents);
+        document.getElementById('decompose-graph-v2-result-compacted').innerHTML = "Compacted components: <br><br>" + minimalComponentsText;
+        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>Distinguishing number: " + minimalComponentsDistinguishingNumber;
       }
 
       function showComposeGraphs() {
         document.getElementById('compose-unigraphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
+        const v2 = document.getElementById('decompose-graph-v2');
+        if (v2) v2.classList.add('hidden');
         document.getElementById('compose-graphs').classList.remove('hidden');
       }
 
@@ -1469,6 +1521,23 @@
         return [result, isUnigraph, distinguishingNumber];
       }
 
+      // Basic components formatter for v1 (no distinguishing/fixing numbers)
+      function formatComponentsBasic(components) {
+        let result = "";
+        let isUnigraph = true;
+        let index = 1;
+        components.forEach(component => {
+          const [text, isGraphUnigraph] = generateTextBasic(component);
+          isUnigraph = isUnigraph && isGraphUnigraph;
+          result += `Component ${index}:<br>${text}`;
+          if (index < components.length) {
+            result += "<br><br>";
+          }
+          index++;
+        });
+        return [result, isUnigraph];
+      }
+
       function convertToHashmap(component) {
         if (component == "") {
           return {};
@@ -1503,11 +1572,10 @@
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
-        const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
-        const [reversedHashComponentsText, reversedHashComponentsIsUnigraph, reversedHashComponentsDistinguishingNumber] = formatComponents(reversedHashComponents);
-        document.getElementById('decompose-graph-result-compacted').innerHTML = "Compacted components: <br><br>" + minimalComponentsText;
-        document.getElementById('decompose-graph-result-full').innerHTML = "Components: <br><br>" + reversedHashComponentsText;
-        document.getElementById('decompose-graph-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>Distinguishing number: " + minimalComponentsDistinguishingNumber;
+        const [minimalComponentsTextBasic, minimalComponentsIsUnigraph] = formatComponentsBasic(minimalComponents);
+        const [reversedHashComponentsTextBasic] = formatComponentsBasic(reversedHashComponents);
+        document.getElementById('decompose-graph-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph;
+        document.getElementById('decompose-graph-result-full').innerHTML = "Components: <br><br>" + reversedHashComponentsTextBasic;
       }
 
       function minimalDecompose(hashComponents) {
@@ -1713,8 +1781,6 @@
         const input2 = document.getElementById('compose-graphs-input-2').value;
         const degSequence1 = convertStringToHashmap(input1);
         const degSequence2 = convertStringToHashmap(input2);
-        console.log("degSequence1", degSequence1);
-        console.log("degSequence2", degSequence2);
         const result = compose(degSequence1, degSequence2);
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
