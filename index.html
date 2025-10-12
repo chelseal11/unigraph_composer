@@ -26,6 +26,21 @@
         color: #333;
         font-size: 1.1em;
       }
+      #compose-unigraphs {
+        margin-left: 16px;
+      }
+      #random-unigraph-generator {
+        margin-left: 16px;
+      }
+      #decompose-graph {
+        margin-left: 16px;
+      }
+      #decompose-graph-v2 {
+        margin-left: 16px;
+      }
+      #compose-graphs {
+        margin-left: 16px;
+      }
     </style>
   </head>
   <body>
@@ -33,7 +48,7 @@
       <button onclick="showComposeUnigraphs()">Compose Unigraphs</button>
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
       <button onclick="showDecompose()">Graph Decomposition and Unigraph Detection Tool</button>
-      <button onclick="showDecomposeV2()">Graph Decomposition v2</button>
+      <button onclick="showDecomposeV2()">Distinguishing Number and Fixing Number</button>
       <button onclick="showComposeGraphs()">Compose Graphs</button>
     </div>
 
@@ -94,12 +109,12 @@
     </div>
 
     <div id="decompose-graph-v2" class="hidden">
-      <h2>Graph Decomposition v2</h2>
+      <h2>Distinguishing Number and Fixing Number</h2>
       <p>Decompose a graph into its basic components (with distinguishing number, fixing number, and compact version):</p>
       <input type="text" id="decompose-graph-input-v2" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" placeholder="Enter a graph to decompose... Example: 5^2, 4^3, 1^1">
       <br>
       <br>
-      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraphV2()">Decompose Graph (v2)</button>
+      <button style="width: 250px; height: 30px; font-size: 1em;" onclick="decomposeGraphV2()">Compact Decomposition</button>
       <br>
       <br>
       <div id="decompose-graph-v2-result-unigraph" style="width: 550px; min-height: 20px; font-family: monospace; background-color: #f5f5f5; border: 1px solid #ccc; padding: 15px; border-radius: 4px; color: #666;" data-placeholder="Click 'Decompose Graph (v2)' to see the result here..."></div>
@@ -148,9 +163,11 @@
             [{m: numVertices / 2}]
           ),
           distinguishingNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             return (Math.ceil((1 + Math.sqrt(1 + 8*m)) / 2))
           },
           fixingNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             return m;
           }
         },
@@ -178,9 +195,13 @@
             return result;
           },
           distinguishingNumber: (m, l) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            if (!isValidInteger(l)) throwError("Invalid parameter l: " + l);
             return Math.ceil(GRAPH_CONFIG['mK2'].distinguishingNumber(m), l)
           },
           fixingNumber: (m, l) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            if (!isValidInteger(l)) throwError("Invalid parameter l: " + l);
             return m + l - 1;
           }
         },
@@ -195,8 +216,12 @@
           potentialParamsByNumVertices: (numVertices) => {
             return [{m: (numVertices - 4) / 2}];
           },
-          distinguishingNumber: (m) => (GRAPH_CONFIG['mK2'].distinguishingNumber(m)),
+          distinguishingNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            return GRAPH_CONFIG['mK2'].distinguishingNumber(m);
+          },
           fixingNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             return m + 1;
           }
         },
@@ -205,6 +230,7 @@
           inputs: ['partition'],
           validation: [],
           degSequence: ({partition}) => {
+            if (partition !== 'A' && partition !== 'B') throwError("Invalid parameter partition: " + partition);
             if (partition === 'A') {
               return {
                 A: {0: 1},
@@ -221,6 +247,7 @@
           potentialParamsByNumVertices: (numVertices) => ([{}]),
           distinguishingNumber: (degreeSequence) => {
             if (degreeSequence.A === undefined || degreeSequence.B === undefined) {
+              throwError("degreeSequence is undefined");
               return undefined;
             }
             const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
@@ -255,7 +282,8 @@
             return result;
           },
           distinguishingNumber: (p, q) =>{
-            if (p === undefined || q === undefined) return undefined;
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             for (let c = 1; c <= 100; c++) {
               const c_factorial = factorial(c);
               const p_factorial = factorial(p);
@@ -267,6 +295,8 @@
             }
           },
           fixingNumber: (p, q) => {
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             const result = p == 1 ? q - 1 : q * (p - 1);
             return result;
           }
@@ -305,20 +335,34 @@
           potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices)),
           distinguishingNumber: (params) => {
-            const p = params.p;
-            const q = params.q;
+            const p_array = params.p;
+            const q_array = params.q;
+            if (p_array.length !== q_array.length) throwError("Invalid parameters: p and q must have the same length");
+            if (p_array.length === 0) throwError("Invalid parameters: p and q must have at least one element");
+            if (p_array === undefined || q_array === undefined) throwError("Invalid parameters: p and q must be defined");
             let max = 0;
-            for (let i = 1; i <= p.length -1; i++) {
-              const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p[i], q[i]);
+            for (let i = 1; i <= p_array.length -1; i++) {
+              const p = p_array[i];
+              const q = q_array[i];
+              if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+              if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
+              const p_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p, q);
               max = Math.max(max, p_q);
             }
             return max;
           },
           fixingNumber: (params) => {
+            const p_array = params.p;
+            const q_array = params.q;
+            if (p_array.length !== q_array.length) throwError("Invalid parameters: p and q must have the same length");
+            if (p_array.length === 0) throwError("Invalid parameters: p and q must have at least one element");
+            if (p_array === undefined || q_array === undefined) throwError("Invalid parameters: p and q must be defined");
             let sum = 0;
-            for (let i = 1; i < params.p.length; i++) {
-              const p = params.p[i];
-              const q = params.q[i];
+            for (let i = 1; i < p_array.length; i++) {
+              const p = p_array[i];
+              const q = q_array[i];
+              if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+              if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
               sum += GRAPH_CONFIG['Spq'].fixingNumber(p, q);
             }
             return sum;
@@ -357,11 +401,17 @@
             return result;
           },
           distinguishingNumber: (p, q1, q2) => {
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q1)) throwError("Invalid parameter q1: " + q1);
+            if (!isValidInteger(q2)) throwError("Invalid parameter q2: " + q2);
             const p_q1 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, q1);
             const p_plus_1_q2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q2);
             return Math.max(p_q1, p_plus_1_q2)
           },
           fixingNumber: (p, q1, q2) => {
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q1)) throwError("Invalid parameter q1: " + q1);
+            if (!isValidInteger(q2)) throwError("Invalid parameter q2: " + q2);
             return GRAPH_CONFIG['Spq'].fixingNumber(p, q1) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q2);
           }
         },
@@ -394,11 +444,15 @@
             return results;
           },
           distinguishingNumber: (p, q) => {
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             const p_2 = GRAPH_CONFIG['Spq'].distinguishingNumber(p, 2);
             const p_plus_1_q = GRAPH_CONFIG['Spq'].distinguishingNumber(p + 1, q);
             return Math.max(p_2, p_plus_1_q)
           },
           fixingNumber: (p, q) => {
+            if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
+            if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             return GRAPH_CONFIG['Spq'].fixingNumber(p, 2) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q);
           }
         },
@@ -422,6 +476,8 @@
       };
 
       const complementSequence = (sequence, sizeOfG) => {
+        if (!isValidInteger(sizeOfG)) throwError("SizeOFG returned an invalid integer: " + sizeOfG);
+        if (sequence === undefined) throwError("Sequence is undefined");
         const complement = {};
         Object.entries(sequence).forEach(([k, v]) => {
           const newDegree = sizeOfG - k - 1;
@@ -432,31 +488,39 @@
 
       const calculateInverse = (g) => {
         if (g.A !== undefined) {
+          const a = invertB(g.B);
+          const b = invertA(g.A);
+          if (a === undefined) throwError("a is undefined");
+          if (b === undefined) throwError("b is undefined");
           return {
-            A: invertB(g.B),
-            B: invertA(g.A)
+            A: a,
+            B: b
           };
         } else {
-          alert(`Graph is not split and can't be inverted`);
+          throwError("Graph is not split and can't be inverted");
           return null;
         }
       };
 
       const invertA = (a) => {
+        if (a === undefined) throwError("a is undefined and can't be inverted");
         const inverse = {};
-        const sizeOfA = calculateSizeOfGraph(a) - 1;
+        const sizeOfA = calculateSizeOfGraph(a);
+        if (!isValidInteger(sizeOfA)) throwError("sizeOfA returned an invalid integer: " + sizeOfA);
         Object.entries(a).forEach(([k, v]) => {
-          const newDegree = Number(k) - sizeOfA;
+          const newDegree = Number(k) - (sizeOfA - 1);
           inverse[newDegree] = v;
         });
         return inverse;
       };
 
       const invertB = (b) => {
+        if (b === undefined) throwError("b is undefined and can't be inverted");
         const inverse = {};
-        const sizeOfB = calculateSizeOfGraph(b) - 1;
+        const sizeOfB = calculateSizeOfGraph(b);
+        if (!isValidInteger(sizeOfB)) throwError("sizeOfB returned an invalid integer: " + sizeOfB);
         Object.entries(b).forEach(([k, v]) => {
-          const newDegree = Number(k) + sizeOfB;
+          const newDegree = Number(k) + (sizeOfB - 1);
           inverse[newDegree] = v;
         });
         return inverse;
@@ -513,7 +577,7 @@
           `;
         }
 
-                const minValues = {
+        const minValues = {
           'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
         };
 
@@ -528,6 +592,7 @@
       }
 
       function generateSelectHTML(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const options = GRAPH_OPTIONS[graph_num].map(type => {
           // Disable PreviousResult option initially until there's a result
           const disabled = (type === 'PreviousResult' && previousResult === null) ? ' disabled' : '';
@@ -549,6 +614,7 @@
       }
 
       function generateTransformationHTML(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const options = Object.keys(TRANSFORMATION_OPTIONS).map(type =>
           `<option value="${type}">${TRANSFORMATION_OPTIONS[type]}</option>`
         ).join('');
@@ -564,6 +630,7 @@
       }
 
       function generateGraphContainerHTML(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const inputTypes = ['p', 'l', 'q', 'q1', 'q2', 'm', 'partition'];
         const inputsHTML = inputTypes.map(type => generateInputHTML(type, graph_num)).join('');
 
@@ -630,11 +697,13 @@
       }
 
       function showInputElement(inputType, graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const element = document.getElementById(`input-${inputType}-${graph_num}`);
         if (element) element.classList.remove('hidden');
       }
 
       function hideAllInputs(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const inputTypes = ['m', 'l', 'p', 'q', 'q1', 'q2', 'partition'];
         inputTypes.forEach(type => {
           const element = document.getElementById(`input-${type}-${graph_num}`);
@@ -678,7 +747,8 @@
 
       function areAllRequiredParamsFilled(graphType, graph_num) {
         const config = GRAPH_CONFIG[graphType];
-        if (!config) return false;
+        if (!config) throwError("config is undefined");
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
 
         // PreviousResult requires an existing previousResult
         if (graphType === 'PreviousResult') {
@@ -716,8 +786,11 @@
       }
 
       function showInputs(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const selection = document.getElementById('graph-type-' + graph_num).value;
+        if (!selection) throwError("selection is undefined");
         const config = GRAPH_CONFIG[selection];
+        if (!config) throwError("config is undefined");
 
         // Hide all inputs first
         hideAllInputs(graph_num);
@@ -745,12 +818,15 @@
       }
 
       function updateDegreeSequenceDisplay(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const displayDiv = document.getElementById(`graph-${graph_num}-sequence`);
-        if (!displayDiv) return;
+        if (!displayDiv) throwError("displayDiv is undefined");
 
         try {
           const graphType = document.getElementById(`graph-type-${graph_num}`).value;
           const transformationType = document.getElementById(`transformation-${graph_num}`).value;
+          if (!graphType) throwError("graphType is undefined");
+          if (!transformationType) throwError("transformationType is undefined");
 
           // Only compute when all required fields are filled
           if (!areAllRequiredParamsFilled(graphType, graph_num)) {
@@ -760,6 +836,7 @@
 
           // Get parameter values for the new signature
           const params = getParameterValues(graph_num);
+          if (!params) throwError("params is undefined");
           let degreeSequence = getDegreeSequence(graphType, params, graph_num);
           if (degreeSequence) {
             // Apply transformation
@@ -782,16 +859,17 @@
 
       function generateText(degreeSequence) {
         const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
-        const degreeSequenceText = "Degree Sequence: " + formatResult(newDegreeSequence || degreeSequence) + "<br>";
+        const degSequenceToDisplay = newDegreeSequence || degreeSequence;
+        if (!degSequenceToDisplay) throwError("degSequenceToDisplay is undefined");
+        const degreeSequenceText = "Degree Sequence: " + formatResult(degSequenceToDisplay) + "<br>";
         const hasCompactedParam = uniParams.compacted !== undefined;
         const isCompacted = hasCompactedParam && uniParams.compacted;
         const paramsString = paramsText(uniParams);
-        const hasParams = paramsString != "";
-        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams, newDegreeSequence);
+        const distinguishingNumberResult = distinguishingNumber(uniLabel, uniType, uniParams, degSequenceToDisplay);
         const hasDistinguishingNumber = distinguishingNumberResult !== undefined;
         const distinguishingNumberString = hasDistinguishingNumber ? "Distinguishing Number: " + distinguishingNumberResult + "<br>" : "";
         const typeString = typeText(uniType, uniLabel, isCompacted);
-        const fixingNumberResult = fixingNumber(uniLabel, uniType, uniParams, newDegreeSequence);
+        const fixingNumberResult = fixingNumber(uniLabel, uniType, uniParams, degSequenceToDisplay);
         const hasFixingNumber = fixingNumberResult !== undefined;
         const fixingNumberString = hasFixingNumber ? "Fixing Number: " + fixingNumberResult + "<br>" : "";
         return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}${fixingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
@@ -800,10 +878,13 @@
       // Basic version for v1: no distinguishing/fixing numbers
       function generateTextBasic(degreeSequence) {
         const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
-        const degreeSequenceText = "Degree Sequence: " + formatResult(newDegreeSequence || degreeSequence) + "<br>";
+        const degSequenceToDisplay = newDegreeSequence || degreeSequence;
+        if (!degSequenceToDisplay) throwError("degSequenceToDisplay is undefined");
+        const degreeSequenceText = "Degree Sequence: " + formatResult(degSequenceToDisplay) + "<br>";
         const hasCompactedParam = uniParams.compacted !== undefined;
         const isCompacted = hasCompactedParam && uniParams.compacted;
         const paramsString = paramsText(uniParams);
+        const hasParams = paramsString != undefined;
         const typeString = typeText(uniType, uniLabel, isCompacted);
         return [`${typeString}${paramsString}${degreeSequenceText}`, isGraphUnigraph];
       }
@@ -912,12 +993,13 @@
       }
 
       function showInputsS2(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const selection = document.getElementById('graph-type-' + graph_num).value;
         if (selection != "S2") {
-          return;
+          throwError("selection is not S2");
         }
         const mValue = document.getElementById('m-' + graph_num).value;
-        const m = parseInt(mValue);
+        const m = Number(mValue);
 
         // Clear existing dynamic inputs
         const DYNAMIC_P = document.getElementById('dynamic-p-inputs-' + graph_num);
@@ -984,12 +1066,11 @@
         const t1 = document.getElementById('transformation-1').value;
         const t2 = document.getElementById('transformation-2').value;
 
-        alert(`Composing: ${TRANSFORMATION_OPTIONS[t1]} ${g1} and ${TRANSFORMATION_OPTIONS[t2]} ${g2}`);
-
         const params1 = getParameterValues(1);
         const params2 = getParameterValues(2);
         if (!checkValidity(g1, params1, 1) || !checkValidity(g2, params2, 2)) {
-          return; // Don't proceed if validation failed
+          throwError("Validation failed");
+          return;
         }
 
         let g = getDegreeSequence(g1, params1, 1);
@@ -997,7 +1078,8 @@
 
         // Check if validation failed for either graph
         if (g === null || h === null) {
-          return; // Don't proceed if validation failed
+          throwError("g or h is null");
+          return;
         }
 
         // Apply transformations
@@ -1005,6 +1087,7 @@
         h = applyTransformation(h, t2, g2);
 
         if (g === null || h === null) {
+          throwError("g or h is null after applying transformations");
           return;
         }
 
@@ -1025,19 +1108,20 @@
           previousResultOption.textContent = 'Previous Result: ' + formatResult(previousResult);
         }
 
-                  // Update any visible previous result displays
-          for (let i = 1; i <= 2; i++) {
-            const dropdown = document.getElementById(`graph-type-${i}`);
-            if (dropdown && dropdown.value === 'PreviousResult') {
-              const previousResultText = document.getElementById(`previous-result-text-${i}`);
-              if (previousResultText) {
-                setDisplayContent(previousResultText, formatResult(previousResult));
-              }
-            }
+        // Update any visible previous result displays
+        for (let i = 1; i <= 2; i++) {
+          const dropdown = document.getElementById(`graph-type-${i}`);
+          if (!dropdown) throwError("dropdown is undefined");
+          if (dropdown && dropdown.value === 'PreviousResult') {
+            const previousResultText = document.getElementById(`previous-result-text-${i}`);
+            if (!previousResultText) throwError("previousResultText is undefined");
+            setDisplayContent(previousResultText, formatResult(previousResult));
           }
-              }
+        }
+      }
 
       function getDegreeSequence(type, params, graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 } = params;
 
         // For S2, collect dynamic pi and qi values and calculate n
@@ -1045,12 +1129,14 @@
           for (let i = 1; i <= M; i++) {
             // Collect pi values
             const pElement = document.getElementById(`s2-p${i}-${graph_num}`);
+            if (!pElement) throwError("pElement is undefined");
             if (pElement) {
               params[`p${i}`] = Number(pElement.value);
             }
 
             // Collect qi values and sum them for n
             const qElement = document.getElementById(`s2-q${i}-${graph_num}`);
+            if (!qElement) throwError("qElement is undefined");
             if (qElement) {
               const qValue = Number(qElement.value);
               params[`q${i}`] = qValue;
@@ -1067,7 +1153,15 @@
         return config.degSequence(params);
       }
 
+      function isValidInteger(value) {
+        if (value === null || value === undefined || value === "") return false;
+        const n = Number(value);
+        if (!Number.isFinite(n) || !Number.isInteger(n)) return false;
+        return true;
+      }
+
       function checkValidity(type, params, graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const { m: M, l: L, p: P, q: Q, q1: Q1, q2: Q2 } = params;
         const config = GRAPH_CONFIG[type];
         if (!config) {
@@ -1084,6 +1178,7 @@
         // Validate standard parameters
         for (const validation of config.validation) {
           const value = paramValues[validation.param];
+          if (!value) throwError("value is undefined");
           const displayName = validation.displayName || validation.param;
 
           if (!isValidNumber(value, validation.min)) {
@@ -1101,12 +1196,12 @@
           for (let i = 1; i <= M; i++) {
             const pElement = document.getElementById(`s2-p${i}-${graph_num}`);
             if (!pElement) {
-              alert(`p${i} input not found for S2`);
+              throwError(`p${i} input not found for S2`);
               return false;
             }
             const pValue = Number(pElement.value);
             if (!isValidNumber(pValue, 1)) {
-              alert(`p${i} must be defined and at least 1 for S2`);
+              throwError(`p${i} must be defined and at least 1 for S2`);
               return false;
             }
             pValues.push(pValue);
@@ -1116,12 +1211,12 @@
           for (let i = 1; i <= M; i++) {
             const qElement = document.getElementById(`s2-q${i}-${graph_num}`);
             if (!qElement) {
-              alert(`q${i} input not found for S2`);
+              throwError(`q${i} input not found for S2`);
               return false;
             }
             const qValue = Number(qElement.value);
             if (!isValidNumber(qValue, 1)) {
-              alert(`q${i} must be defined and at least 1 for S2`);
+              throwError(`q${i} must be defined and at least 1 for S2`);
               return false;
             }
             qValues.push(qValue);
@@ -1130,7 +1225,7 @@
           // Check that p1 > p2 > ... > pm
           for (let i = 0; i < pValues.length - 1; i++) {
             if (pValues[i] <= pValues[i + 1]) {
-              alert(`p values must be in descending order: p${i + 1} > p${i + 2} > ... > p${M} for S2`);
+              throwError(`p values must be in descending order: p${i + 1} > p${i + 2} > ... > p${M} for S2`);
               return false;
             }
           }
@@ -1140,6 +1235,7 @@
       }
 
       function calculateSizeOfHA(h) {
+        if (h === undefined) throwError("h is undefined");
         if (h.A !== undefined) {
           return Object.values(h.A).reduce((sum, val) => sum + val, 0);
         } else {
@@ -1148,6 +1244,7 @@
       }
 
       function calculateSizeOfGraph(g) {
+        if (g === undefined) throwError("g is undefined");
         if (g.A !== undefined) {
           return Object.values(g.A).reduce((sum, val) => sum + val, 0) + Object.values(g.B).reduce((sum, val) => sum + val, 0);
         } else {
@@ -1156,8 +1253,11 @@
       }
 
       function composeG(g, h) {
+        if (g === undefined) throwError("g is undefined");
+        if (h === undefined) throwError("h is undefined");
         let transformedGraph = {};
         const sizeOfHA = calculateSizeOfHA(h);
+        if (!isValidInteger(sizeOfHA)) throwError("sizeOfHA returned an invalid integer: " + sizeOfHA);
         if (g.A !== undefined) {
           transformedGraph.A = {};
           transformedGraph.B = {};
@@ -1176,10 +1276,13 @@
       }
 
       function composeH(g, h) {
+        if (g === undefined) throwError("g is undefined");
+        if (h === undefined) throwError("h is undefined");
         let transformedGraph = {};
         transformedGraph.A = {};
         transformedGraph.B = {};
         const sizeOfG = calculateSizeOfGraph(g);
+        if (!isValidInteger(sizeOfG)) throwError("sizeOfG returned an invalid integer: " + sizeOfG);
         Object.entries(h.A).forEach(([k, v]) => {
           transformedGraph.A[parseInt(k) + sizeOfG] = v;
         });
@@ -1190,6 +1293,8 @@
       }
 
       function combinedGraphs(g, h) {
+        if (g === undefined) throwError("g is undefined");
+        if (h === undefined) throwError("h is undefined");
         // if they both have A, then we need to combine them
         if (g.A !== undefined && h.A !== undefined) {
           return combineGraphs([g.A, h.A, g.B, h.B]);
@@ -1226,6 +1331,8 @@
       }
 
       function compose(g, h) {
+        if (g === undefined) throwError("g is undefined");
+        if (h === undefined) throwError("h is undefined");
         if (h.A === undefined || h.B === undefined) {
           alert("h is not split");
           return undefined;
@@ -1238,10 +1345,12 @@
 
       function formatHashmap(hashmap) {
         if (hashmap === undefined) {
+          throwError("hashmap is undefined");
           return "";
         }
         let resultString = "";
         const numKeys = Object?.keys(hashmap)?.length;
+        if (!isValidInteger(numKeys)) throwError("numKeys returned an invalid integer: " + numKeys);
         Object?.keys(hashmap)?.sort((a, b) => b - a).forEach((key, index) => {
           resultString += `${key}^${hashmap[key]} `;
           if (index !== numKeys - 1) {
@@ -1253,6 +1362,7 @@
 
       function longFormatResult(result) {
         if (result === undefined) {
+          throwError("result is undefined");
           return "";
         }
 
@@ -1269,6 +1379,7 @@
 
       function longFormatResult(result) {
         if (result === undefined) {
+          throwError("result is undefined");
           return "";
         }
         let resultString = "";
@@ -1288,12 +1399,9 @@
       }
 
       function formatResult(result) {
-        if (result === undefined) {
+        if (result === undefined || result === null) {
+          throwError("result is undefined or null");
           return "";
-        }
-
-        if (result === null) {
-          return "null";
         }
 
         // Handle split graphs (with A and B partitions)
@@ -1312,8 +1420,7 @@
       function showComposeUnigraphs() {
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
-        const v2 = document.getElementById('decompose-graph-v2');
-        if (v2) v2.classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('compose-unigraphs').classList.remove('hidden');
       }
@@ -1321,6 +1428,7 @@
       function showRandomUnigraphGenerator() {
         document.getElementById('compose-unigraphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList.remove('hidden');
       }
@@ -1330,8 +1438,7 @@
         document.getElementById('random-unigraph-generator').classList. add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.remove('hidden');
-        const v2 = document.getElementById('decompose-graph-v2');
-        if (v2) v2.classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.add('hidden');
       }
 
       function showDecomposeV2() {
@@ -1344,12 +1451,15 @@
 
       function decomposeGraphV2() {
         const input = document.getElementById('decompose-graph-input-v2').value;
+        if (!input) throwError("input is undefined");
         if (!isValidDegreeSequence(input)) {
-          alert("Invalid degree sequence");
+          throwError("Invalid degree sequence");
           return;
         }
         const components = decompose(input);
+        if (!components) throwError("components is undefined");
         const hashComponents = components.map(component => convertGraphToHashmap(component));
+        if (!hashComponents) throwError("hashComponents is undefined");
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
         const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
@@ -1363,20 +1473,22 @@
         document.getElementById('compose-unigraphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
-        const v2 = document.getElementById('decompose-graph-v2');
-        if (v2) v2.classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.add('hidden');
         document.getElementById('compose-graphs').classList.remove('hidden');
       }
 
       function computeRandomUnigraph() {
         for (let i = 1; i <= 3; i++) {
           const resultDiv = document.getElementById(`random-unigraph-${i}`);
+          if (!resultDiv) throwError("resultDiv is undefined");
           if (resultDiv) {
             resultDiv.innerHTML = "";
           }
         }
         const numVertices = document.getElementById('num-vertices').value;
+        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
         const numGraphs = document.getElementById('num-graphs').value;
+        if (!isValidInteger(numGraphs)) throwError("numGraphs is undefined");
         const vertice_partitions = partitionVertices(numVertices, numGraphs);
         const graphs = [];
         for (let i = 0; i < vertice_partitions.length; i++) {
@@ -1386,6 +1498,7 @@
 
           // Display each random unigraph in its respective text box
           const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
+          if (!resultDiv) throwError("resultDiv is undefined");
           if (resultDiv) {
             const label = `graph ${i + 1}`;
             const numVerticesText = `number of vertices: ${partitionNumVertices}`;
@@ -1400,15 +1513,14 @@
         }
 
         const finalResult = composeGraphs(graphs);
+        if (!finalResult) throwError("finalResult is undefined");
         const compositionResultDiv = document.getElementById('final-result-short');
-        // const compositionResultDivLong = document.getElementById('final-result-long');
-        if (compositionResultDiv) {
-          compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
-          // compositionResultDivLong.innerHTML = `final result long: ${longFormatResult(finalResult)}`;
-        }
+        compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
       }
 
       function partitionVertices(numVertices, numGraphs) {
+        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
+        if (!isValidInteger(numGraphs)) throwError("numGraphs is undefined");
         const numPartitions = numGraphs - 1;
         const range = numVertices - 1;
         const partitions = [];
@@ -1423,6 +1535,7 @@
       }
 
       function generateRandomUnigraph(numVertices, split = true) {
+        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
         let degreeSequence = {};
         const potentialGraphTypes = calculatePotentialGraphs(numVertices, split);
         const graphType = potentialGraphTypes[Math.floor(Math.random() * potentialGraphTypes.length)];
@@ -1430,12 +1543,14 @@
           return null;
         }
         const potentialParams = GRAPH_CONFIG[graphType].potentialParamsByNumVertices(numVertices);
+        if (!potentialParams) return null;
         const params = potentialParams[Math.floor(Math.random() * potentialParams.length)];
         degreeSequence = GRAPH_CONFIG[graphType].degSequence(params);
         return {graphType: graphType, params: params, degreeSequence: degreeSequence};
       }
 
       function calculatePotentialGraphs(numVertices, split) {
+        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
         const potentialGraphs = [];
         for (const graphType in GRAPH_CONFIG) {
           if (split && !GRAPH_CONFIG[graphType].split) {
@@ -1449,6 +1564,7 @@
       }
 
       function enumerateParamsForTotal(T) {
+        if (!isValidInteger(T)) throwError("T is undefined");
         if (T < 2) return []; // no solutions
 
         const results = [];
@@ -1526,7 +1642,6 @@
         return [result, isUnigraph, distinguishingNumber];
       }
 
-      // Basic components formatter for v1 (no distinguishing/fixing numbers)
       function formatComponentsBasic(components) {
         let result = "";
         let isUnigraph = true;
@@ -1548,7 +1663,8 @@
           return {};
         }
 
-        const degreeArray = component.split(', ');
+        const strippedComponent = component.replaceAll(' ', '');
+        const degreeArray = strippedComponent.split(',');
         const hashmap = {};
 
         for (let i = 0; i < degreeArray.length; i++) {
@@ -1562,25 +1678,27 @@
         if (component == "0") {
           return {0: 1};
         }
-        if (component.includes('; ')) {
-          const left = component.split('; ')[0];
-          const right = component.split('; ')[1];
+        const strippedComponent = component.replaceAll(' ', '');
+        if (strippedComponent.includes(';')) {
+          const [left, right] = strippedComponent.split(';');
           return {A: convertToHashmap(left), B: convertToHashmap(right)};
         } else {
-          return convertToHashmap(component);
+          return convertToHashmap(strippedComponent);
         }
       }
 
       function decomposeGraph() {
         const input = document.getElementById('decompose-graph-input').value;
         if (!isValidDegreeSequence(input)) {
-          alert("Invalid degree sequence");
+          throwError("Invalid degree sequence");
           return;
         }
         const components = decompose(input);
+        if (!components) throwError("components is undefined");
         const hashComponents = components.map(component => convertGraphToHashmap(component));
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
+        if (!minimalComponents) throwError("minimalComponents is undefined");
         const [minimalComponentsTextBasic, minimalComponentsIsUnigraph] = formatComponentsBasic(minimalComponents);
         const [reversedHashComponentsTextBasic] = formatComponentsBasic(reversedHashComponents);
         document.getElementById('decompose-graph-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph;
@@ -1588,6 +1706,7 @@
       }
 
       function minimalDecompose(hashComponents) {
+        if (!hashComponents) throwError("hashComponents is undefined");
         let combinedComponents = [];
         for (let index = 0; index < hashComponents.length; index++) {
           const component = hashComponents[index];
@@ -1623,6 +1742,12 @@
       }
 
       function combineSVGs(firstComponent, secondComponent) {
+        if (firstComponent === undefined) throwError("firstComponent is undefined");
+        if (secondComponent === undefined) throwError("secondComponent is undefined");
+        if (firstComponent.A === undefined) throwError("firstComponent.A is undefined");
+        if (firstComponent.B === undefined) throwError("firstComponent.B is undefined");
+        if (secondComponent.A === undefined) throwError("secondComponent.A is undefined");
+        if (secondComponent.B === undefined) throwError("secondComponent.B is undefined");
         const firstA = firstComponent.A;
         const firstB = firstComponent.B;
         const secondA = secondComponent.A;
@@ -1662,9 +1787,12 @@
       }
 
       function decompose(input) {
+        if (!input) throwError("input is undefined");
         const d = convertToDegSequence(input);
+        if (!d) throwError("d is undefined");
         let i = 0;
-        let j = Object.keys(d).length;
+        let j = Number(Object.keys(d).length);
+        if (!isValidInteger(j)) throwError("j is undefined");
         let b = 0;
         let s = [];
         while (i < j) {
@@ -1673,6 +1801,7 @@
             return s;
           }
           const bestPair = findBestPair(d, i, j, b);
+          if (!bestPair) throwError("bestPair is undefined");
           let p = bestPair[0];
           let q = bestPair[1];
           if (p == -1 && q == -1) {
@@ -1715,8 +1844,10 @@
       }
 
       function convertToDegSequence(input) {
+        if (!input) throwError("input is undefined");
         const result = {};
-        const inputArray = input.split(', ');
+        const strippedInput = input.replaceAll(' ', '');
+        const inputArray = strippedInput.split(',');
         let index = 1;
         for (let i = 0; i < inputArray.length; i++) {
           const [degree, count] = inputArray[i].split('^');
@@ -1729,6 +1860,9 @@
       }
 
       function findBestPair(d, i, j, b) {
+        if (!isValidInteger(i)) throwError("i is undefined");
+        if (!isValidInteger(j)) throwError("j is undefined");
+        if (!isValidInteger(b)) throwError("b is undefined");
         let m = j - i;
         let d_prime = {};
         for (let t = 1; t <= m; t++) {
@@ -1760,16 +1894,16 @@
       }
 
       function convertStringToHashmap(input) {
-        if (input.includes(';')) {
-          const strippedInput = input.replaceAll(' ', '');
-          const left = strippedInput.split(';')[0];
-          const right = strippedInput.split(';')[1];
+        if (!input) throwError("input is undefined");
+        const strippedInput = input.replaceAll(' ', '');
+        if (strippedInput.includes(';')) {
+          const [left, right] = strippedInput.split(';');
           return {A: convertStringToHashmap(left), B: convertStringToHashmap(right)};
         } else {
-          if (input == "" || input == null || input == undefined || input == " ") {
+          if (strippedInput == "" || strippedInput == null || strippedInput == undefined || strippedInput == " ") {
             return {};
           }
-          const inputArray = input.split(', ');
+          const inputArray = strippedInput.split(',');
           const hashmap = {};
           for (let i = 0; i < inputArray.length; i++) {
             if (inputArray[i] == "0") {
@@ -1789,65 +1923,51 @@
         const input1 = document.getElementById('compose-graphs-input-1').value;
         const input2 = document.getElementById('compose-graphs-input-2').value;
         if (!isValidDegreeSequence(input1) || !isValidDegreeSequence(input2)) {
-          alert("Invalid degree sequence");
+          throwError("Invalid degree sequence");
           return;
         }
         const degSequence1 = convertStringToHashmap(input1);
         const degSequence2 = convertStringToHashmap(input2);
+        if (!degSequence1) throwError("degSequence1 is undefined");
+        if (!degSequence2) throwError("degSequence2 is undefined");
         const result = compose(degSequence1, degSequence2);
+        if (!result) throwError("result is undefined");
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
 
       function isComponent(input) {
+        if (!input) throwError("input is undefined");
         const splitGraph = isSplitGraph(input);
-        const splitGraphResult = splitGraph[0];
-        const newInput = splitGraph[1];
+        if (!splitGraph) throwError("splitGraph is undefined");
+        const [splitGraphResult, newInput] = splitGraph;
         if (splitGraphResult) {
-          const standardSplitComponent = isSplitComponent(newInput);
-          const standardSplitComponentResult = standardSplitComponent[0];
-          const standardSplitComponentType = standardSplitComponent[1];
-          const standardSplitComponentParams = standardSplitComponent[2];
+          const [standardSplitComponentResult, standardSplitComponentType, standardSplitComponentParams] = isSplitComponent(newInput);
           if (standardSplitComponentResult) {
             return [true, standardSplitComponentType, "Standard", standardSplitComponentParams, newInput];
           }
           const inverse = calculateInverse(newInput);
-          const inverseSplitComponent = isSplitComponent(inverse);
-          const inverseSplitComponentResult = inverseSplitComponent[0];
-          const inverseSplitComponentType = inverseSplitComponent[1];
-          const inverseSplitComponentParams = inverseSplitComponent[2];
+          const [inverseSplitComponentResult, inverseSplitComponentType, inverseSplitComponentParams] = isSplitComponent(inverse);
           if (inverseSplitComponentResult) {
             return [true, inverseSplitComponentType, "Inverse", inverseSplitComponentParams, newInput];
           }
           const complement = calculateComplement(newInput);
-          const isComplementSplitComponent = isSplitComponent(complement);
-          const isComplementSplitComponentResult = isComplementSplitComponent[0];
-          const isComplementSplitComponentType = isComplementSplitComponent[1];
-          const isComplementSplitComponentParams = isComplementSplitComponent[2];
+          const [isComplementSplitComponentResult, isComplementSplitComponentType, isComplementSplitComponentParams] = isSplitComponent(complement);
           if (isComplementSplitComponentResult) {
             return [true, isComplementSplitComponentType, "Complement", isComplementSplitComponentParams, newInput];
           }
           const complementOfInverse = calculateComplement(complement);
-          const isComplementOfInverseSplitComponent = isSplitComponent(complementOfInverse);
-          const isComplementOfInverseSplitComponentResult = isComplementOfInverseSplitComponent[0];
-          const isComplementOfInverseSplitComponentType = isComplementOfInverseSplitComponent[1];
-          const isComplementOfInverseSplitComponentParams = isComplementOfInverseSplitComponent[2];
+          const [isComplementOfInverseSplitComponentResult, isComplementOfInverseSplitComponentType, isComplementOfInverseSplitComponentParams] = isSplitComponent(complementOfInverse);
           if (isComplementOfInverseSplitComponentResult) {
             return [true, isComplementOfInverseSplitComponentType, "Complement of Inverse", isComplementOfInverseSplitComponentParams, newInput];
           }
           return [false, "None", "None", "None"];
         } else {
-          const nonSplitComponent = isNonSplitComponent(input);
-          const nonSplitComponentResult = nonSplitComponent[0];
-          const nonSplitComponentType = nonSplitComponent[1];
-          const nonSplitComponentParams = nonSplitComponent[2];
+          const [nonSplitComponentResult, nonSplitComponentType, nonSplitComponentParams] = isNonSplitComponent(input);
           if (nonSplitComponentResult) {
             return [true, nonSplitComponentType, "Standard", nonSplitComponentParams, input];
           }
           const complement = calculateComplement(input);
-          const inverseNonSplitComponent = isNonSplitComponent(complement);
-          const inverseNonSplitComponentResult = inverseNonSplitComponent[0];
-          const inverseNonSplitComponentType = inverseNonSplitComponent[1];
-          const inverseNonSplitComponentParams = inverseNonSplitComponent[2];
+          const [inverseNonSplitComponentResult, inverseNonSplitComponentType, inverseNonSplitComponentParams] = isNonSplitComponent(complement);
           if (inverseNonSplitComponentResult) {
             return [true, inverseNonSplitComponentType, "Complement", inverseNonSplitComponentParams, input];
           }
@@ -1856,59 +1976,53 @@
       }
 
       function isSplitComponent(input) {
-        const isSVGComponent = isSVG(input);
-        const isSVGResult = isSVGComponent[0];
+        if (!input) throwError("input is undefined");
+        const [isSVGResult, isSVGParams] = isSVG(input);
         if (isSVGResult) {
-          return [true, "SVG", isSVGComponent[1]];
+          return [true, "SVG", isSVGParams];
         }
-        const isSpqComponent = isSpq(input);
-        const isSpqResult = isSpqComponent[0];
+        const [isSpqResult, isSpqParams] = isSpq(input);
         if (isSpqResult) {
-          return [true, "Spq", isSpqComponent[1]];
+          return [true, "Spq", isSpqParams];
         }
-        const isS2Component = isS2(input);
-        const isS2Result = isS2Component[0];
+        const [isS2Result, isS2Params] = isS2(input);
         if (isS2Result) {
-          return [true, "S2", isS2Component[1]];
+          return [true, "S2", isS2Params];
         }
-        const isS3Component = isS3(input);
-        const isS3Result = isS3Component[0];
+        const [isS3Result, isS3Params] = isS3(input);
         if (isS3Result) {
-          return [true, "S3", isS3Component[1]];
+          return [true, "S3", isS3Params];
         }
-        const isS4Component = isS4(input);
-        const isS4Result = isS4Component[0];
+        const [isS4Result, isS4Params] = isS4(input);
         if (isS4Result) {
-          return [true, "S4", isS4Component[1]];
+          return [true, "S4", isS4Params];
         }
         return [false, "None", "None"];
       }
 
       function isNonSplitComponent(input) {
-        const isC5Component = isC5(input);
-        const isC5Result = isC5Component[0];
+        if (!input) throwError("input is undefined");
+        const [isC5Result, isC5Params] = isC5(input);
         if (isC5Result) {
-          return [true, "C5", isC5Component[1]];
+          return [true, "C5", isC5Params];
         }
-        const ismK2Component = ismK2(input);
-        const ismK2Result = ismK2Component[0];
+        const [ismK2Result, ismK2Params] = ismK2(input);
         if (ismK2Result) {
-          return [true, "mK2", ismK2Component[1]];
+          return [true, "mK2", ismK2Params];
         }
-        const isU2Component = isU2(input);
-        const isU2Result = isU2Component[0];
+        const [isU2Result, isU2Params] = isU2(input);
         if (isU2Result) {
-          return [true, "U2", isU2Component[1]];
+          return [true, "U2", isU2Params];
         }
-        const isU3Component = isU3(input);
-        const isU3Result = isU3Component[0];
+        const [isU3Result, isU3Params] = isU3(input);
         if (isU3Result) {
-          return [true, "U3", isU3Component[1]];
+          return [true, "U3", isU3Params];
         }
         return [false, "None", "None"];
       }
 
       function isC5(input) {
+        if (!input) throwError("input is undefined");
         const keys = Object.keys(input);
         const values = Object.values(input);
         if (keys.length !== 1 || Number(keys[0]) !== 2 || values[0] !== 5) {
@@ -1918,6 +2032,7 @@
       }
 
       function ismK2(input) {
+        if (!input) throwError("input is undefined");
         const keys = Object.keys(input);
         const values = Object.values(input);
         if (keys.length > 1) {
@@ -1936,6 +2051,7 @@
       }
 
       function isU2(input) {
+        if (!input) throwError("input is undefined");
         const ds = Object.keys(input).sort((a, b) => b - a);
         if (ds.length !== 2) {
           return [false, "None"];
@@ -1963,6 +2079,7 @@
       }
 
       function isU3(input) {
+        if (!input) throwError("input is undefined");
         const ds = Object.keys(input);
         if (ds.length !== 2) {
           return [false, "None"];
@@ -1986,6 +2103,7 @@
       }
 
       function isSVG(input) {
+        if (!input) throwError("input is undefined");
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -1994,14 +2112,11 @@
         const rB = Object.values(b);
         if (dA.length > 1 || dB.length > 1) {
           return [false, "None"];
-        }
-        if (dA.length !== 1 && dB.length !== 1) {
+        } else if (dA.length !== 1 && dB.length !== 1) {
           return [false, "None"]  ;
-        }
-        if (dA.length === 0 && dB.length === 0) {
+        } else if (dA.length === 0 && dB.length === 0) {
           return [false, "None"];
-        }
-        if (dA.length === 1 && dB.length === 0) {
+        } else if (dA.length === 1 && dB.length === 0) {
           const d1 = Number(dA[0]);
           const r1 = rA[0];
           if (d1 == 0 || r1 == 1) {
@@ -2010,8 +2125,7 @@
           if (r1 > d1 && r1 - d1 == 1) {
             return [true, {partition: "A", compacted: true}];
           }
-        }
-        if (dA.length === 0 && dB.length === 1) {
+        } else if (dA.length === 0 && dB.length === 1) {
           const d2 = Number(dB[0]);
           const r2 = rB[0];
           if (d2 == 0 || r2 == 1) {
@@ -2025,6 +2139,7 @@
       }
 
       function isSpq(input) {
+        if (!input) throwError("input is undefined");
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -2050,6 +2165,7 @@
       }
 
       function isS2(input) {
+        if (!input) throwError("input is undefined");
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -2076,6 +2192,7 @@
       }
 
       function isS3(input) {
+        if (!input) throwError("input is undefined");
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -2105,6 +2222,7 @@
       }
 
       function isS4(input) {
+        if (!input) throwError("input is undefined");
         const a = input.A;
         const b = input.B;
         const dA = Object.keys(a);
@@ -2136,6 +2254,7 @@
       }
 
       function isSplitGraph(input) {
+        if (!input) throwError("input is undefined");
         if (input.A === undefined || input.B === undefined) {
           let i = 1;
           const orderedKeys = Object.keys(input).sort((a, b) => b - a);
@@ -2186,6 +2305,7 @@
       }
 
       function factorial(n) {
+        if (!isValidInteger(n)) throwError("n is undefined");
         if (n === 0) return 1;
         let result = 1;
         for (let i = 1; i <= n; i++) {
@@ -2195,13 +2315,13 @@
       }
 
       function isValidDegreeSequence(input) {
-        console.log("input", input);
-        if (input.includes(';')) {
-          const strippedInput = input.replaceAll(' ', '');
+        if (!input) throwError("input is undefined");
+        const strippedInput = input.replaceAll(' ', '');
+        if (strippedInput.includes(';')) {
           const [left, right] = strippedInput.split(';');
           return isValidDegreeSequence(left) && isValidDegreeSequence(right);
         }
-        const degreeSequence = convertToDegSequence(input);
+        const degreeSequence = convertToDegSequence(strippedInput);
         const degreeSequenceKeys = Object.keys(degreeSequence);
         const degreeSequenceValues = Object.values(degreeSequence);
         if (degreeSequenceKeys.length !== degreeSequenceValues.length) return false;
@@ -2215,6 +2335,7 @@
       }
 
       function satifiesHavelHakimi(input) {
+        if (!input) throwError("input is undefined");
         let inputArray = input;
         while (inputArray.length > 0) {
           const first = inputArray[0];
@@ -2226,6 +2347,11 @@
           inputArray.sort((a, b) => b - a);
         }
         return true;
+      }
+
+      function throwError(message) {
+        alert(message);
+        throw new Error(message);
       }
 
       // Initialize the HTML when the page loads
