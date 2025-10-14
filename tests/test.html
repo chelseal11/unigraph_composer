@@ -324,6 +324,451 @@
           });
         });
 
+        // Additional coverage to ensure all functions are exercised
+        describe('API completeness', function () {
+          it('exposes all documented functions', function () {
+            const names = [
+              'generateInputHTML','generateSelectHTML','generateTransformationHTML','generateGraphContainerHTML','initializeHTML','hideAndClearInput','showInputElement','hideAllInputs','getParameterValues','areAllRequiredParamsFilled','showInputs','updateDegreeSequenceDisplay','generateText','generateTextBasic','fixingNumber','typeText','paramsText','distinguishingNumber','setDisplayContent','showInputsS2','applyTransformation','computeComposition','getDegreeSequence','isValidInteger','checkValidity','calculateSizeOfHA','calculateSizeOfGraph','composeG','composeH','combinedGraphs','combineGraphs','composeGraphs','compose','formatHashmap','longFormatResult','formatResult','showComposeUnigraphs','showRandomUnigraphGenerator','showDecompose','showDecomposeV2','decomposeGraphV2','showComposeGraphs','computeRandomUnigraph','partitionVertices','generateRandomUnigraph','calculatePotentialGraphs','enumerateParamsForTotal','formatComponents','formatComponentsBasic','convertToHashmap','convertGraphToHashmap','decomposeGraph','minimalDecompose','combineSVGs','decompose','convertToDegSequence','findBestPair','convertStringToHashmap','graphComposition','isComponent','isSplitComponent','isNonSplitComponent','isC5','ismK2','isU2','isU3','isSVG','isSpq','isS2','isS3','isS4','isSplitGraph','factorial','isValidDegreeSequence','satifiesHavelHakimi','throwError','complementSequence','calculateComplement','calculateInverse','invertA','invertB'
+            ];
+            names.forEach((n) => {
+              const fn = getFn(n);
+              expect(fn, n + ' missing').to.be.a('function');
+            });
+          });
+        });
+
+        describe('validators and helpers', function () {
+          it('isValidInteger validates integers', function () {
+            const isValidInteger = getFn('isValidInteger');
+            expect(isValidInteger(0)).to.equal(true);
+            expect(isValidInteger('3')).to.equal(true);
+            expect(isValidInteger(3.14)).to.equal(false);
+            expect(isValidInteger('')).to.equal(false);
+          });
+
+          it('Havel-Hakimi and degree sequence validation', function () {
+            const satifiesHavelHakimi = getFn('satifiesHavelHakimi');
+            const isValidDegreeSequence = getFn('isValidDegreeSequence');
+            expect(satifiesHavelHakimi([2,1,1])).to.equal(true);
+            expect(satifiesHavelHakimi([3,0])).to.equal(false);
+            expect(isValidDegreeSequence('2^1, 1^2')).to.equal(true);
+            expect(isValidDegreeSequence('10^1, 0^1')).to.equal(false);
+          });
+
+          it('checkValidity validates parameters', function () {
+            const checkValidity = getFn('checkValidity');
+            // Valid Spq
+            expect(checkValidity('Spq', { p: 1, q: 2 }, 1)).to.equal(true);
+            // Invalid Spq (q < 2) should throw via throwError
+            const originalAlert = app.alert;
+            let alerted = false;
+            try {
+              app.alert = function () { alerted = true; };
+              expect(() => checkValidity('Spq', { p: 1, q: 1 }, 1)).to.throw();
+              expect(alerted).to.equal(true);
+            } finally {
+              app.alert = originalAlert;
+            }
+          });
+
+          it('setDisplayContent sets text and placeholder', function () {
+            const setDisplayContent = getFn('setDisplayContent');
+            const el = app.document.createElement('div');
+            el.dataset.placeholder = 'placeholder';
+            setDisplayContent(el, 'hello');
+            expect(el.textContent).to.equal('hello');
+            setDisplayContent(el, '');
+            expect(el.textContent).to.equal('placeholder');
+          });
+
+          it('typeText and paramsText render as expected', function () {
+            const typeText = getFn('typeText');
+            const paramsText = getFn('paramsText');
+            const t = typeText('Standard', 'Spq', false);
+            const p = paramsText({ p: 1, q: 2 });
+            expect(t).to.contain('Type: Spq Standard');
+            expect(p).to.equal('Params: p: 1, q: 2, <br>');
+          });
+        });
+
+        describe('DOM-driven UI helpers', function () {
+          it('initializeHTML builds dropdowns and sequences', function () {
+            // initializeHTML already ran on load; verify elements exist
+            const g1 = app.document.getElementById('graph-type-1');
+            const g2 = app.document.getElementById('graph-type-2');
+            expect(g1).to.exist;
+            expect(g2).to.exist;
+          });
+
+          it('showInputs shows required inputs for Spq and hides others', function () {
+            const showInputs = getFn('showInputs');
+            const g1 = app.document.getElementById('graph-type-1');
+            g1.value = 'Spq';
+            showInputs(1);
+            expect(app.document.getElementById('input-p-1').classList.contains('hidden')).to.equal(false);
+            expect(app.document.getElementById('input-q-1').classList.contains('hidden')).to.equal(false);
+            // m is not required for Spq
+            expect(app.document.getElementById('input-m-1').classList.contains('hidden')).to.equal(true);
+          });
+
+          it('getParameterValues and areAllRequiredParamsFilled work', function () {
+            const getParameterValues = getFn('getParameterValues');
+            const areAllRequiredParamsFilled = getFn('areAllRequiredParamsFilled');
+            const showInputs = getFn('showInputs');
+            const g1 = app.document.getElementById('graph-type-1');
+            g1.value = 'Spq';
+            showInputs(1);
+            app.document.getElementById('p-1').value = '1';
+            app.document.getElementById('q-1').value = '2';
+            expect(areAllRequiredParamsFilled('Spq', 1)).to.equal(true);
+            const params = getParameterValues(1);
+            expect(params.p).to.equal(1);
+            expect(params.q).to.equal(2);
+          });
+
+          it('showInputsS2 creates dynamic inputs for S2', function () {
+            const showInputs = getFn('showInputs');
+            const showInputsS2 = getFn('showInputsS2');
+            const g1 = app.document.getElementById('graph-type-1');
+            g1.value = 'S2';
+            showInputs(1);
+            const m1 = app.document.getElementById('m-1');
+            m1.value = '2';
+            showInputsS2(1);
+            expect(app.document.getElementById('s2-p1-1')).to.exist;
+            expect(app.document.getElementById('s2-q2-1')).to.exist;
+          });
+
+          it('updateDegreeSequenceDisplay renders degree sequence text', function () {
+            const showInputs = getFn('showInputs');
+            const updateDegreeSequenceDisplay = getFn('updateDegreeSequenceDisplay');
+            const g1 = app.document.getElementById('graph-type-1');
+            g1.value = 'Spq';
+            showInputs(1);
+            app.document.getElementById('p-1').value = '1';
+            app.document.getElementById('q-1').value = '2';
+            updateDegreeSequenceDisplay(1);
+            const div = app.document.getElementById('graph-1-sequence');
+            expect(div.innerHTML).to.contain('Degree Sequence: 2^2 ; 1^2 ');
+          });
+
+          it('navigation helpers toggle sections', function () {
+            const showComposeUnigraphs = getFn('showComposeUnigraphs');
+            const showRandomUnigraphGenerator = getFn('showRandomUnigraphGenerator');
+            const showDecompose = getFn('showDecompose');
+            const showDecomposeV2 = getFn('showDecomposeV2');
+            const showComposeGraphs = getFn('showComposeGraphs');
+            showComposeUnigraphs();
+            expect(app.document.getElementById('compose-unigraphs').classList.contains('hidden')).to.equal(false);
+            showRandomUnigraphGenerator();
+            expect(app.document.getElementById('random-unigraph-generator').classList.contains('hidden')).to.equal(false);
+            showDecompose();
+            expect(app.document.getElementById('decompose-graph').classList.contains('hidden')).to.equal(false);
+            showDecomposeV2();
+            expect(app.document.getElementById('decompose-graph-v2').classList.contains('hidden')).to.equal(false);
+            showComposeGraphs();
+            expect(app.document.getElementById('compose-graphs').classList.contains('hidden')).to.equal(false);
+          });
+        });
+
+        describe('HTML generator functions', function () {
+          it('generateInputHTML renders number inputs and partition select', function () {
+            const generateInputHTML = getFn('generateInputHTML');
+            const htmlNum = generateInputHTML('p', 1);
+            expect(htmlNum).to.be.a('string');
+            expect(htmlNum).to.contain('id="p-1"');
+            const htmlSel = generateInputHTML('partition', 2);
+            expect(htmlSel).to.contain('select id="partition-2"');
+          });
+
+          it('generateSelectHTML lists available graph options', function () {
+            const generateSelectHTML = getFn('generateSelectHTML');
+            const html = generateSelectHTML(1);
+            expect(html).to.contain('graph-type-1');
+            expect(html).to.contain('C₅');
+          });
+
+          it('generateTransformationHTML lists transformations', function () {
+            const generateTransformationHTML = getFn('generateTransformationHTML');
+            const html = generateTransformationHTML(1);
+            expect(html).to.contain('transformation-1');
+            expect(html).to.contain('Complement of Inverse');
+          });
+
+          it('generateGraphContainerHTML composes a full section', function () {
+            const generateGraphContainerHTML = getFn('generateGraphContainerHTML');
+            const html = generateGraphContainerHTML(1);
+            expect(html).to.contain('Graph 1');
+            expect(html).to.contain('graph-1-sequence');
+          });
+        });
+
+        describe('Visibility helpers', function () {
+          it('hideAndClearInput clears input and hides element', function () {
+            const hideAndClearInput = getFn('hideAndClearInput');
+            const wrapper = app.document.createElement('div');
+            wrapper.id = 'input-x-1';
+            const input = app.document.createElement('input');
+            input.type = 'number';
+            input.id = 'x-1';
+            input.value = '5';
+            wrapper.appendChild(input);
+            app.document.body.appendChild(wrapper);
+            hideAndClearInput(wrapper, 'x-1');
+            expect(wrapper.classList.contains('hidden')).to.equal(true);
+            expect(input.value).to.equal('');
+          });
+
+          it('showInputElement unhides the requested input', function () {
+            const showInputElement = getFn('showInputElement');
+            let div = app.document.createElement('div');
+            div.id = 'input-q-2';
+            div.classList.add('hidden');
+            app.document.body.appendChild(div);
+            showInputElement('q', 2);
+            div = app.document.getElementById('input-q-2');
+            expect(div.classList.contains('hidden')).to.equal(false);
+          });
+
+          it('hideAllInputs hides dynamic and static fields', function () {
+            const hideAllInputs = getFn('hideAllInputs');
+            const showInputs = getFn('showInputs');
+            const g1 = app.document.getElementById('graph-type-1');
+            g1.value = 'Spq';
+            showInputs(1);
+            hideAllInputs(1);
+            expect(app.document.getElementById('input-p-1').classList.contains('hidden')).to.equal(true);
+            expect(app.document.getElementById('dynamic-p-inputs-1').classList.contains('hidden')).to.equal(true);
+          });
+        });
+
+        describe('Text generators', function () {
+          it('generateText and generateTextBasic produce labeled summaries', function () {
+            const generateText = getFn('generateText');
+            const generateTextBasic = getFn('generateTextBasic');
+            const g = { A: { 2: 2 }, B: { 1: 2 } };
+            const [t1] = generateText(g);
+            const [t2] = generateTextBasic(g);
+            expect(t1).to.contain('Degree Sequence:');
+            expect(t2).to.contain('Degree Sequence:');
+          });
+        });
+
+        describe('Distinguishing and fixing numbers', function () {
+          it('distinguishingNumber delegates per family', function () {
+            const distinguishingNumber = getFn('distinguishingNumber');
+            const dnSpq = distinguishingNumber('Spq', 'Standard', { p: 1, q: 2 }, { A: { 2: 2 }, B: { 1: 2 } });
+            expect(dnSpq).to.be.a('number');
+          });
+
+          it('fixingNumber delegates per family', function () {
+            const fixingNumber = getFn('fixingNumber');
+            const fnSpq = fixingNumber('Spq', 'Standard', { p: 1, q: 2 }, { A: { 2: 2 }, B: { 1: 2 } });
+            expect(fnSpq).to.be.a('number');
+          });
+        });
+
+        describe('Degree sequence and random generator', function () {
+          it('getDegreeSequence computes known families', function () {
+            const getDegreeSequence = getFn('getDegreeSequence');
+            const spq = getDegreeSequence('Spq', { p: 1, q: 2 }, 1);
+            expect(spq).to.deep.equal({ A: { 2: 2 }, B: { 1: 2 } });
+          });
+
+          it('computeRandomUnigraph populates UI boxes and final result', function () {
+            const showRandomUnigraphGenerator = getFn('showRandomUnigraphGenerator');
+            const computeRandomUnigraph = getFn('computeRandomUnigraph');
+            showRandomUnigraphGenerator();
+            app.document.getElementById('num-vertices').value = '6';
+            app.document.getElementById('num-graphs').value = '2';
+            computeRandomUnigraph();
+            expect(app.document.getElementById('random-unigraph-1').innerHTML).to.not.equal('');
+            expect(app.document.getElementById('final-result-short').innerHTML).to.contain('final result:');
+          });
+        });
+        describe('composition workflows', function () {
+          it('computeComposition displays composed result correctly', function () {
+            const showComposeUnigraphs = getFn('showComposeUnigraphs');
+            const showInputs = getFn('showInputs');
+            const getDegreeSequence = getFn('getDegreeSequence');
+            const applyTransformation = getFn('applyTransformation');
+            const compose = getFn('compose');
+            const formatResult = getFn('formatResult');
+            const computeComposition = getFn('computeComposition');
+
+            showComposeUnigraphs();
+            // Graph 1: Spq p=1,q=2
+            app.document.getElementById('graph-type-1').value = 'Spq';
+            showInputs(1);
+            app.document.getElementById('p-1').value = '1';
+            app.document.getElementById('q-1').value = '2';
+            // Graph 2: SVG partition A
+            app.document.getElementById('graph-type-2').value = 'SVG';
+            showInputs(2);
+            app.document.getElementById('partition-2').value = 'A';
+
+            // Expected
+            const g = applyTransformation(getDegreeSequence('Spq', { p: 1, q: 2 }, 1), 'standard', 'Spq');
+            const h = applyTransformation(getDegreeSequence('SVG', { partition: 'A' }, 2), 'standard', 'SVG');
+            const expected = formatResult(compose(g, h));
+
+            computeComposition();
+            const out = app.document.getElementById('composition-result-short').textContent;
+            expect(out).to.equal(expected);
+          });
+
+          it('graphComposition parses inputs and composes', function () {
+            const showComposeGraphs = getFn('showComposeGraphs');
+            const graphComposition = getFn('graphComposition');
+            const convertStringToHashmap = getFn('convertStringToHashmap');
+            const compose = getFn('compose');
+            const formatResult = getFn('formatResult');
+
+            showComposeGraphs();
+            const i1 = app.document.getElementById('compose-graphs-input-1');
+            const i2 = app.document.getElementById('compose-graphs-input-2');
+            i1.value = '1^2';
+            i2.value = '1^2 ; 0';
+            const expected = formatResult(compose(convertStringToHashmap(i1.value), convertStringToHashmap(i2.value)));
+            graphComposition();
+            expect(app.document.getElementById('compose-graphs-result').textContent).to.equal(expected);
+          });
+        });
+
+        describe('random generator and parameter enumeration', function () {
+          it('partitionVertices returns sorted partitions ending with total', function () {
+            const partitionVertices = getFn('partitionVertices');
+            const parts = partitionVertices(10, 3);
+            expect(parts[parts.length - 1]).to.equal(10);
+            const sorted = parts.slice().sort((a,b)=>a-b);
+            expect(parts).to.deep.equal(sorted);
+          });
+
+          it('calculatePotentialGraphs lists plausible types', function () {
+            const calculatePotentialGraphs = getFn('calculatePotentialGraphs');
+            const types = calculatePotentialGraphs(4, true);
+            expect(types).to.include('Spq');
+            expect(types).to.include('S2');
+          });
+
+          it('generateRandomUnigraph returns a graph type and params', function () {
+            const generateRandomUnigraph = getFn('generateRandomUnigraph');
+            const out = generateRandomUnigraph(4, true);
+            expect(out).to.be.an('object');
+            expect(out.graphType).to.be.a('string');
+            expect(out.degreeSequence).to.be.an('object');
+          });
+
+          it('enumerateParamsForTotal enumerates valid S2 parameter sets', function () {
+            const enumerateParamsForTotal = getFn('enumerateParamsForTotal');
+            const sols = enumerateParamsForTotal(6);
+            expect(sols.length).to.be.greaterThan(0);
+            expect(sols[0]).to.have.property('m');
+          });
+        });
+
+        describe('formatting and components utilities - extra', function () {
+          it('formatComponents and formatComponentsBasic summarize components', function () {
+            const formatComponents = getFn('formatComponents');
+            const formatComponentsBasic = getFn('formatComponentsBasic');
+            const comps = [{ A: { 2: 2 }, B: { 1: 2 } }];
+            const [text, isUni, dn] = formatComponents(comps);
+            expect(text).to.contain('Component 1:');
+            expect(isUni).to.equal(true);
+            expect(dn).to.be.a('number');
+            const [textB, isUniB] = formatComponentsBasic(comps);
+            expect(textB).to.contain('Component 1:');
+            expect(isUniB).to.equal(true);
+          });
+
+          it('minimalDecompose and combineSVGs coalesce SVG components', function () {
+            const minimalDecompose = getFn('minimalDecompose');
+            const combineSVGs = getFn('combineSVGs');
+            const a = { A: { 0: 1 }, B: {} };
+            const b = { A: { 0: 1 }, B: {} };
+            const combined = combineSVGs(a, b);
+            expect(combined).to.deep.equal({ A: { 1: 2 }, B: {} });
+            const out = minimalDecompose([a, b]);
+            expect(out.length).to.equal(1);
+          });
+
+          it('convert and detector helpers handle additional cases', function () {
+            const isSplitComponent = getFn('isSplitComponent');
+            const isNonSplitComponent = getFn('isNonSplitComponent');
+            const isComponent = getFn('isComponent');
+            expect(isSplitComponent({ A: { 2: 2 }, B: { 1: 2 } })[0]).to.equal(true);
+            expect(isNonSplitComponent({ 2: 5 })[0]).to.equal(true);
+            expect(isComponent({ 2: 1, 1: 2 })[0]).to.equal(true);
+          });
+
+          it('decomposeGraph and decomposeGraphV2 write outputs', function () {
+            const showDecompose = getFn('showDecompose');
+            const showDecomposeV2 = getFn('showDecomposeV2');
+            const decomposeGraph = getFn('decomposeGraph');
+            const decomposeGraphV2 = getFn('decomposeGraphV2');
+            showDecompose();
+            app.document.getElementById('decompose-graph-input').value = '2^1, 1^2';
+            decomposeGraph();
+            expect(app.document.getElementById('decompose-graph-result-full').innerHTML).to.contain('Components:');
+            showDecomposeV2();
+            app.document.getElementById('decompose-graph-input-v2').value = '2^1, 1^2';
+            decomposeGraphV2();
+            expect(app.document.getElementById('decompose-graph-v2-result-unigraph').innerHTML).to.contain('Is unigraph:');
+          });
+
+          it('throwError throws and alerts', function () {
+            const throwError = getFn('throwError');
+            const originalAlert = app.alert;
+            try {
+              let alerted = false;
+              app.alert = function () { alerted = true; };
+              expect(() => throwError('x')).to.throw();
+              expect(alerted).to.equal(true);
+            } finally {
+              app.alert = originalAlert;
+            }
+          });
+
+          it('complementSequence computes complement given size', function () {
+            const complementSequence = getFn('complementSequence');
+            const comp = complementSequence({ 2: 2, 1: 2 }, 4);
+            expect(comp).to.deep.equal({ 1: 2, 2: 2 });
+          });
+        });
+
+      describe('decompose', function () {
+        it('decomposes 3^1, 1^2 into a single segment', function () {
+          const decompose = getFn('decompose');
+          const out = decompose('3^1, 1^2');
+          expect(out).to.deep.equal(['3, 1, 1']);
+        });
+
+        it('decomposes 2^1, 1^2 into expected segments', function () {
+          const decompose = getFn('decompose');
+          const out = decompose('2^1, 1^2');
+          expect(out).to.deep.equal(['0; ', '; 0', '; 0']);
+        });
+
+        it('handles a single zero vertex', function () {
+          const decompose = getFn('decompose');
+          const out = decompose('0^1');
+          expect(out).to.deep.equal(['; 0']);
+        });
+
+        it('throws on undefined input', function () {
+          const decompose = getFn('decompose');
+          const originalAlert = app.alert;
+          try {
+            let alerted = false;
+            app.alert = function () { alerted = true; };
+            expect(() => decompose()).to.throw();
+            expect(alerted).to.equal(true);
+          } finally {
+            app.alert = originalAlert;
+          }
+        });
+      });
+
         // Keep Mocha UI available if you want to run visually
         try { mocha.run(); } catch (e) { /* ignore in console-only usage */ }
       });

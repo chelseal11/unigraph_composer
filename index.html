@@ -244,7 +244,7 @@
             }
           },
           potentialVertices: [1],
-          potentialParamsByNumVertices: (numVertices) => ([{}]),
+          potentialParamsByNumVertices: (numVertices) => ([{partition: 'A'}, {partition: 'B'}]),
           distinguishingNumber: (degreeSequence) => {
             if (degreeSequence.A === undefined || degreeSequence.B === undefined) {
               throwError("degreeSequence is undefined");
@@ -581,7 +581,8 @@
           'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
         };
 
-        const onchange = inputType === 'm' ? ` onchange="showInputsS2(${graph_num}); updateDegreeSequenceDisplay(${graph_num})"` : ` oninput="updateDegreeSequenceDisplay(${graph_num})"`;
+        let onchange = inputType === 'm' ?? ` onchange="handleMChange(${graph_num})"`;
+        onchange += ` oninput="updateDegreeSequenceDisplay(${graph_num})"`
 
         return `
           <div id="input-${inputType}-${graph_num}" class="hidden">
@@ -589,6 +590,14 @@
             <input type="number" id="${inputType}-${graph_num}" name="${inputType}" min="${minValues[inputType]}"${onchange}>
           </div>
         `;
+      }
+
+      function handleMChange(graph_num) {
+        if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
+        const selection = document.getElementById('graph-type-' + graph_num).value;
+        if (selection === 'S2') {
+          showInputsS2(graph_num);
+        }
       }
 
       function generateSelectHTML(graph_num) {
@@ -699,7 +708,7 @@
       function showInputElement(inputType, graph_num) {
         if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
         const element = document.getElementById(`input-${inputType}-${graph_num}`);
-        if (element) element.classList.remove('hidden');
+        element.classList.remove('hidden')
       }
 
       function hideAllInputs(graph_num) {
@@ -1182,8 +1191,7 @@
           const displayName = validation.displayName || validation.param;
 
           if (!isValidNumber(value, validation.min)) {
-            alert(`${displayName} must be defined and at least ${validation.min} for ${validation.name}`);
-            return false;
+            throwError(`${displayName} must be defined and at least ${validation.min} for ${validation.name}`);
           }
         }
 
@@ -1450,10 +1458,12 @@
       }
 
       function decomposeGraphV2() {
+        document.getElementById('decompose-graph-v2-result-compacted').innerHTML = "";
+        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "";
         const input = document.getElementById('decompose-graph-input-v2').value;
         if (!input) throwError("input is undefined");
         if (!isValidDegreeSequence(input)) {
-          throwError("Invalid degree sequence");
+          throwError(`${input} is an invalid degree sequence`);
           return;
         }
         const components = decompose(input);
@@ -1478,17 +1488,22 @@
       }
 
       function computeRandomUnigraph() {
-        for (let i = 1; i <= 3; i++) {
+        const numGraphs = document.getElementById('num-graphs').value;
+        if (!isValidInteger(numGraphs)) throwError("numGraphs is undefined");
+        if (numGraphs < 1) throwError("Must be at least 1 graph");
+        if (numGraphs > 3) throwError("Must be at most 3 graphs");
+        const numVertices = document.getElementById('num-vertices').value;
+        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
+        if (numVertices < 1) throwError("Must be at least 1 vertex");
+        if (numVertices > 20) throwError("Must be at most 20 vertices");
+        if (numGraphs > numVertices) throwError("Must have at least as many graphs as vertices");
+        for (let i = 1; i <= numGraphs; i++) {
           const resultDiv = document.getElementById(`random-unigraph-${i}`);
-          if (!resultDiv) throwError("resultDiv is undefined");
+          if (!resultDiv) throwError("resultDiv" + (i) + " is undefined");
           if (resultDiv) {
             resultDiv.innerHTML = "";
           }
         }
-        const numVertices = document.getElementById('num-vertices').value;
-        if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
-        const numGraphs = document.getElementById('num-graphs').value;
-        if (!isValidInteger(numGraphs)) throwError("numGraphs is undefined");
         const vertice_partitions = partitionVertices(numVertices, numGraphs);
         const graphs = [];
         for (let i = 0; i < vertice_partitions.length; i++) {
@@ -1498,7 +1513,7 @@
 
           // Display each random unigraph in its respective text box
           const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
-          if (!resultDiv) throwError("resultDiv is undefined");
+          if (!resultDiv) throwError("resultDiv" + (i + 1) + " is undefined");
           if (resultDiv) {
             const label = `graph ${i + 1}`;
             const numVerticesText = `number of vertices: ${partitionNumVertices}`;
@@ -1688,9 +1703,11 @@
       }
 
       function decomposeGraph() {
+        document.getElementById('decompose-graph-result-unigraph').innerHTML = "";
+        document.getElementById('decompose-graph-result-full').innerHTML = "";
         const input = document.getElementById('decompose-graph-input').value;
         if (!isValidDegreeSequence(input)) {
-          throwError("Invalid degree sequence");
+          throwError(`${input} is an invalid degree sequence`);
           return;
         }
         const components = decompose(input);
@@ -1920,10 +1937,18 @@
       }
 
       function graphComposition() {
+        document.getElementById('compose-graphs-result').innerHTML = "";
         const input1 = document.getElementById('compose-graphs-input-1').value;
         const input2 = document.getElementById('compose-graphs-input-2').value;
-        if (!isValidDegreeSequence(input1) || !isValidDegreeSequence(input2)) {
-          throwError("Invalid degree sequence");
+        const input1Valid = isValidDegreeSequence(input1);
+        const input2Valid = isValidDegreeSequence(input2);
+        if (!input1Valid || !input2Valid) {
+          if (!input1Valid) {
+            throwError(`${input1} is an invalid degree sequence`);
+          }
+          if (!input2Valid) {
+            throwError(`${input2} is an invalid degree sequence`);
+          }
           return;
         }
         const degSequence1 = convertStringToHashmap(input1);
