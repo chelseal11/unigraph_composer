@@ -581,7 +581,7 @@
           'p': 1, 'l': 1, 'q': 1, 'q1': 1, 'q2': 1, 'm': graph_num === 1 ? 2 : 1
         };
 
-        let onchange = inputType === 'm' ?? ` onchange="handleMChange(${graph_num})"`;
+        let onchange = inputType === 'm' ? ` onchange="handleMChange(${graph_num})"` : "";
         onchange += ` oninput="updateDegreeSequenceDisplay(${graph_num})"`
 
         return `
