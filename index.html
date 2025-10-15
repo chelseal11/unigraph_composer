@@ -254,7 +254,15 @@
             const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
             return aTotalVertices + bTotalVertices;
           },
-          fixingNumber: () => 1
+          fixingNumber: (degreeSequence) => {
+            if (degreeSequence.A === undefined || degreeSequence.B === undefined) {
+              throwError("degreeSequence is undefined");
+              return undefined;
+            }
+            const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
+            const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
+            return aTotalVertices + bTotalVertices - 1;
+          }
         },
         'Spq': {
           split: true,
