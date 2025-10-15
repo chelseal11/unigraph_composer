@@ -889,7 +889,7 @@
         const fixingNumberResult = fixingNumber(uniLabel, uniType, uniParams, degSequenceToDisplay);
         const hasFixingNumber = fixingNumberResult !== undefined;
         const fixingNumberString = hasFixingNumber ? "Fixing Number: " + fixingNumberResult + "<br>" : "";
-        return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}${fixingNumberString}`, isGraphUnigraph, distinguishingNumberResult];
+        return [`${typeString}${paramsString}${degreeSequenceText}${distinguishingNumberString}${fixingNumberString}`, isGraphUnigraph, distinguishingNumberResult, fixingNumberResult];
       }
 
       // Basic version for v1: no distinguishing/fixing numbers
@@ -1480,11 +1480,12 @@
         if (!hashComponents) throwError("hashComponents is undefined");
         const reversedHashComponents = hashComponents.reverse();
         const minimalComponents = minimalDecompose(reversedHashComponents);
-        const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber] = formatComponents(minimalComponents);
+        const [minimalComponentsText, minimalComponentsIsUnigraph, minimalComponentsDistinguishingNumber, minimalComponentsFixingNumber] = formatComponents(minimalComponents);
         const [reversedHashComponentsText] = formatComponents(reversedHashComponents);
         document.getElementById('decompose-graph-v2-result-compacted').innerHTML = "Compacted components: <br><br>" + minimalComponentsText;
         const distinguishingNumberText = minimalComponentsIsUnigraph ? "Distinguishing number: " + minimalComponentsDistinguishingNumber : "";
-        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>" + distinguishingNumberText;
+        const fixingNumberText = minimalComponentsIsUnigraph ? "Fixing number: " + minimalComponentsFixingNumber : "";
+        document.getElementById('decompose-graph-v2-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph + "<br>" + distinguishingNumberText + "<br>" + fixingNumberText;
       }
 
       function showComposeGraphs() {
@@ -1652,17 +1653,19 @@
         let isUnigraph = true;
         let distinguishingNumber = 0;
         let index = 1;
+        let fixingNumber = 0;
         components.forEach(component => {
-          const [text, isGraphUnigraph, distinguishingNumberResult] = generateText(component);
+          const [text, isGraphUnigraph, distinguishingNumberResult, fixingNumberResult] = generateText(component);
           isUnigraph = isUnigraph && isGraphUnigraph;
           distinguishingNumber = Math.max(distinguishingNumber, distinguishingNumberResult);
+          fixingNumber += fixingNumberResult;
           result += `Component ${index}:<br>${text}`;
           if (index < components.length) {
             result += "<br><br>";
           }
           index++;
         });
-        return [result, isUnigraph, distinguishingNumber];
+        return [result, isUnigraph, distinguishingNumber, fixingNumber];
       }
 
       function formatComponentsBasic(components) {
