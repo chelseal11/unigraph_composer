@@ -340,7 +340,7 @@
               B: B
             };
           },
-          potentialVertices: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
+          potentialVertices: [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],
           potentialParamsByNumVertices: (numVertices) => (enumerateParamsForTotal(numVertices)),
           distinguishingNumber: (params) => {
             const p_array = params.p;
@@ -939,8 +939,8 @@
         if (hasType) {
           let text = `Type: `;
           text += isCompacted ? "Compacted " : "";
-          text += hasLabel ? `${uniLabel} ` : "";
-          text += hasType ? `${uniType}` : "";
+          text += hasType ? `${uniType} ` : "";
+          text += hasLabel ? `${GRAPH_LABELS[uniLabel]}` : "";
           text += "<br>";
           return text;
         } else {
@@ -1497,11 +1497,11 @@
       }
 
       function computeRandomUnigraph() {
-        const numGraphs = document.getElementById('num-graphs').value;
+        const numGraphs = Number(document.getElementById('num-graphs').value);
         if (!isValidInteger(numGraphs)) throwError("numGraphs is undefined");
         if (numGraphs < 1) throwError("Must be at least 1 graph");
         if (numGraphs > 3) throwError("Must be at most 3 graphs");
-        const numVertices = document.getElementById('num-vertices').value;
+        const numVertices = Number(document.getElementById('num-vertices').value);
         if (!isValidInteger(numVertices)) throwError("numVertices is undefined");
         if (numVertices < 1) throwError("Must be at least 1 vertex");
         if (numVertices > 20) throwError("Must be at most 20 vertices");
@@ -1513,27 +1513,43 @@
             resultDiv.innerHTML = "";
           }
         }
-        const vertice_partitions = partitionVertices(numVertices, numGraphs);
-        const graphs = [];
-        for (let i = 0; i < vertice_partitions.length; i++) {
-          const partitionNumVertices = i === 0 ? vertice_partitions[i] : vertice_partitions[i] - vertice_partitions[i - 1];
-          const randomUnigraph = i === 0 ? generateRandomUnigraph(partitionNumVertices, false) : generateRandomUnigraph(partitionNumVertices);
-          graphs.push(randomUnigraph.degreeSequence);
+        let maxAttempts = 50;
+        let attempt = 0;
+        let graphs;
+        while (attempt < maxAttempts) {
+          graphs = [];
+          attempt++;
+          const vertice_partitions = partitionVertices(numVertices, numGraphs);
+          for (let i = 0; i < vertice_partitions.length; i++) {
+            const partitionNumVertices = i === 0 ? vertice_partitions[i] : vertice_partitions[i] - vertice_partitions[i - 1];
+            const randomUnigraph = i === 0 ? generateRandomUnigraph(partitionNumVertices, false) : generateRandomUnigraph(partitionNumVertices);
+            if (!randomUnigraph) {
+              continue;
+            }
+            graphs.push(randomUnigraph.degreeSequence);
 
-          // Display each random unigraph in its respective text box
-          const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
-          if (!resultDiv) throwError("resultDiv" + (i + 1) + " is undefined");
-          if (resultDiv) {
-            const label = `graph ${i + 1}`;
-            const numVerticesText = `number of vertices: ${partitionNumVertices}`;
-            const typeText = `type: ${randomUnigraph.graphType}`;
-            const paramsText = `${Object.entries(randomUnigraph.params).map(([param, value]) => {
-              return `${param}: ${value}`;
-            }).join(', ')}`;
-            const degreeSequenceText = `degree sequence: ${formatResult(randomUnigraph.degreeSequence)}`;
-            const text = paramsText ? `${label}<br>${numVerticesText}<br>${typeText}<br>${paramsText}<br>${degreeSequenceText}` : `${label}<br>${numVerticesText}<br>${typeText}<br>${degreeSequenceText}`;
-            resultDiv.innerHTML = text;
+            // Display each random unigraph in its respective text box
+            const resultDiv = document.getElementById(`random-unigraph-${i + 1}`);
+            if (!resultDiv) throwError("resultDiv" + (i + 1) + " is undefined");
+            if (resultDiv) {
+              const label = `Graph ${i + 1}`;
+              const numVerticesText = `Number of vertices: ${partitionNumVertices}`;
+              const typeText = `Type: ${GRAPH_LABELS[randomUnigraph.graphType]}`;
+              const paramsText = `${Object.entries(randomUnigraph.params).map(([param, value]) => {
+                return `${param}: ${value}`;
+              }).join(', ')}`;
+              const degreeSequenceText = `Degree sequence: ${formatResult(randomUnigraph.degreeSequence)}`;
+              const text = paramsText ? `${label}<br>${numVerticesText}<br>${typeText}<br>${paramsText}<br>${degreeSequenceText}` : `${label}<br>${numVerticesText}<br>${typeText}<br>${degreeSequenceText}`;
+              resultDiv.innerHTML = text;
+            }
           }
+          if (graphs.length === numGraphs) {
+            break;
+          }
+        }
+        if (graphs.length !== numGraphs) {
+          throwError("Unable to generate random unigraphs for any partitioning; please try again.");
+          return;
         }
 
         const finalResult = composeGraphs(graphs);
