@@ -1583,7 +1583,7 @@
           return null;
         }
         const potentialParams = GRAPH_CONFIG[graphType].potentialParamsByNumVertices(numVertices);
-        if (!potentialParams) return null;
+        if (!potentialParams || potentialParams.length === 0) return null;
         const params = potentialParams[Math.floor(Math.random() * potentialParams.length)];
         degreeSequence = GRAPH_CONFIG[graphType].degSequence(params);
         return {graphType: graphType, params: params, degreeSequence: degreeSequence};
@@ -1633,6 +1633,7 @@
           // Distinct r_i in strict descending order; p_i = r_i - 1; q_i = multiplicity
           const rList = Array.from(counts.keys()).sort((a, b) => b - a);
           const m = rList.length;
+          if (m < 2) return null;
           const p = rList.map(r => r - 1);
           const q = rList.map(r => counts.get(r));
 
@@ -1659,9 +1660,9 @@
           }
 
           return params;
-        });
+        }).filter(Boolean);
 
-        return solutions;
+        return solutions.length > 0 ? solutions : [];
       }
 
       function formatComponents(components) {
