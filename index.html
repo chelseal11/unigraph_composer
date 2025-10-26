@@ -509,7 +509,7 @@
       <h3>Overview</h3>
       <p>
         This tool provides a comprehensive suite for working with unigraphs and graph composition.
-        Unigraphs are graphs with the property that every automorphism of the graph fixes at least one vertex.
+        Unigraphs are graphs that are completely determined by their degree sequence.
       </p>
 
       <h3>Available Tools</h3>
@@ -545,8 +545,8 @@
         <h4>4. Distinguishing Number and Fixing Number</h4>
         <p>
           Similar to the decomposition tool, but also computes the distinguishing number and fixing
-          number for the graph. The tool provides both a compacted version of the decomposition and
-          detailed information about each component.
+          number for the graph. The tool provides the compacted version of the decomposition and
+          the distinguishing number and fixing number of each component.
         </p>
       </div>
 
@@ -562,7 +562,7 @@
       <h3>Key Concepts</h3>
 
       <div style="margin-bottom: 15px;">
-        <strong>Unigraph:</strong> A graph where every automorphism fixes at least one vertex.
+        <strong>Unigraph:</strong> A graph that is completely determined by its degree sequence.
       </div>
 
       <div style="margin-bottom: 15px;">
@@ -581,7 +581,7 @@
       </div>
 
       <div style="margin-bottom: 15px;">
-        <strong>Degree Sequence:</strong> A list of vertex degrees in a graph, typically written in
+        <strong>Degree Sequence:</strong> A list of vertex degrees in a graph, written in
         descending order.
       </div>
 
@@ -756,7 +756,7 @@
             <li><strong>Unigraph detection:</strong> Determines if the graph is a unigraph</li>
             <li><strong>Distinguishing number:</strong> Minimum colors needed for vertex coloring such that only trivial automorphism preserves colors</li>
             <li><strong>Fixing number:</strong> Minimum vertices fixed by only the trivial automorphism</li>
-            <li><strong>Compacted components:</strong> Combines similar single-vertex components for cleaner output</li>
+            <li><strong>Compacted components:</strong> Combines single-vertex components as needed to determine the fixing and distinguishing numbers</li>
           </ul>
           <p>
             This advanced analysis is useful for research and detailed graph property verification.
@@ -800,7 +800,7 @@
             <li>Click "Compose Graphs" to compute the composition</li>
           </ul>
           <p>
-            This tool is useful when you already know the degree sequences and want to compose them directly without selecting specific graph types or parameters.
+            This tool is useful for applying the same composition operation to graphs regardless of if they're unigraphs.
           </p>
           <p>
             <strong>Note:</strong> The second graph must be a valid split graph for the composition to work.
