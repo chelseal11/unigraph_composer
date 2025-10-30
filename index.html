@@ -602,6 +602,11 @@
             <!-- Dynamic HTML will be generated here -->
           </div>
 
+          <button style="width: 50px; height: 50px; font-size: 2em; line-height: 1; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 20px auto; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0;"
+                  onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
+                  onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
+                  onclick="addGraph()">+</button>
+
           <button style="height: 50px; font-size: 1.2em;" onclick="computeComposition()">Compute Composition</button>
 
           <div id="result-container" class="static_height">
@@ -1193,11 +1198,20 @@
         return inverse;
       };
 
+      // Track the current number of graphs
+      let graphCount = 2;
+
       // Define which graph types are available for each dropdown
       const GRAPH_OPTIONS = {
         1: ['C5', 'mK2', 'U2', 'U3', 'SVG', 'Spq', 'S2', 'S3', 'S4'],
         2: ['SVG', 'Spq', 'S2', 'S3', 'S4']
       };
+
+      // Function to get options for a given graph number
+      function getGraphOptions(graph_num) {
+        if (graph_num === 1) return GRAPH_OPTIONS[1];
+        return GRAPH_OPTIONS[2]; // All other graphs use Graph 2 options
+      }
 
       const GRAPH_LABELS = {
         'C5': 'C₅',
@@ -1268,7 +1282,7 @@
 
       function generateSelectHTML(graph_num) {
         if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
-        const options = GRAPH_OPTIONS[graph_num].map(type => {
+        const options = getGraphOptions(graph_num).map(type => {
           const label = GRAPH_LABELS[type];
           return `<option value="${type}">${label}</option>`;
         }).join('');
@@ -1334,6 +1348,21 @@
         // const resultDivLong = document.getElementById('composition-result-long');
         setDisplayContent(resultDivShort, "");
         // setDisplayContent(resultDivLong, "");
+      }
+
+      function addGraph() {
+        graphCount++;
+        const dropdownContainer = document.querySelector('.dropdown-container');
+
+        // Create a temporary div to hold the new graph HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = generateGraphContainerHTML(graphCount);
+
+        // Append the new graph to the container
+        dropdownContainer.appendChild(tempDiv.firstElementChild);
+
+        // Initialize the inputs for the new graph
+        showInputs(graphCount);
       }
 
       function hideAndClearInput(element, inputId) {
@@ -1690,37 +1719,45 @@
       }
 
       function computeComposition() {
-        const g1 = document.getElementById('graph-type-1').value;
-        const g2 = document.getElementById('graph-type-2').value;
-        const t1 = document.getElementById('transformation-1').value;
-        const t2 = document.getElementById('transformation-2').value;
+        // Collect all graphs, transformations, and parameters
+        const graphs = [];
 
-        const params1 = getParameterValues(1);
-        const params2 = getParameterValues(2);
-        if (!checkValidity(g1, params1, 1) || !checkValidity(g2, params2, 2)) {
-          throwError("Validation failed");
-          return;
+        for (let i = 1; i <= graphCount; i++) {
+          const graphType = document.getElementById(`graph-type-${i}`).value;
+          const transformation = document.getElementById(`transformation-${i}`).value;
+          const params = getParameterValues(i);
+
+          // Validate each graph
+          if (!checkValidity(graphType, params, i)) {
+            throwError(`Validation failed for Graph ${i}`);
+            return;
+          }
+
+          // Get degree sequence
+          let degreeSequence = getDegreeSequence(graphType, params, i);
+
+          // Check if validation failed
+          if (degreeSequence === null) {
+            throwError(`Graph ${i} degree sequence is null`);
+            return;
+          }
+
+          // Apply transformation
+          degreeSequence = applyTransformation(degreeSequence, transformation, graphType);
+
+          if (degreeSequence === null) {
+            throwError(`Graph ${i} is null after applying transformation`);
+            return;
+          }
+
+          graphs.push(degreeSequence);
         }
 
-        let g = getDegreeSequence(g1, params1, 1);
-        let h = getDegreeSequence(g2, params2, 2);
-
-        // Check if validation failed for either graph
-        if (g === null || h === null) {
-          throwError("g or h is null");
-          return;
+        // Compose all graphs sequentially (g1 ∘ g2 ∘ g3 ∘ ...)
+        let result = graphs[0];
+        for (let i = 1; i < graphs.length; i++) {
+          result = compose(result, graphs[i]);
         }
-
-        // Apply transformations
-        g = applyTransformation(g, t1, g1);
-        h = applyTransformation(h, t2, g2);
-
-        if (g === null || h === null) {
-          throwError("g or h is null after applying transformations");
-          return;
-        }
-
-        const result = compose(g, h);
 
         // Display result in the result div
         const resultDivShort = document.getElementById('composition-result-short');
