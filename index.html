@@ -624,9 +624,6 @@
             <li>Optionally apply transformations (inverse, complement) to either graph</li>
             <li>Click "Compute Composition" to see the resulting degree sequence</li>
           </ul>
-          <p>
-            The result can be saved and used as "Previous Result" in Graph 1 for further compositions.
-          </p>
         </div>
       </div>
     </div>
@@ -810,9 +807,6 @@
     </div>
 
     <script>
-      // Global variable to store the previous composition result
-      let previousResult = null;
-
       // Configuration object for graph types and their required inputs
       const GRAPH_CONFIG = {
         'C5': {
@@ -1133,11 +1127,6 @@
             if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             return GRAPH_CONFIG['Spq'].fixingNumber(p, 2) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q);
           }
-        },
-        'PreviousResult': {
-          inputs: [],
-          validation: [],
-          degSequence: () => previousResult
         }
       };
 
@@ -1206,7 +1195,7 @@
 
       // Define which graph types are available for each dropdown
       const GRAPH_OPTIONS = {
-        1: ['C5', 'mK2', 'U2', 'U3', 'SVG', 'Spq', 'S2', 'S3', 'S4', 'PreviousResult'],
+        1: ['C5', 'mK2', 'U2', 'U3', 'SVG', 'Spq', 'S2', 'S3', 'S4'],
         2: ['SVG', 'Spq', 'S2', 'S3', 'S4']
       };
 
@@ -1219,8 +1208,7 @@
         'Spq': 'S(p, q), p ≥ 1, q ≥ 2',
         'S2': 'S2(p1, q1, . . . , pm, qm), m ≥ 2 and p1 > p2 > . . . > pm',
         'S3': 'S3(p, q1, q2) p ≥ 1, q1 ≥ 2, q2 ≥ 1',
-        'S4': 'S4(p, q) p ≥ 1, q ≥ 1',
-        'PreviousResult': 'Previous Result'
+        'S4': 'S4(p, q) p ≥ 1, q ≥ 1'
       };
 
       const TRANSFORMATION_OPTIONS = {
@@ -1281,16 +1269,8 @@
       function generateSelectHTML(graph_num) {
         if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid integer: " + graph_num);
         const options = GRAPH_OPTIONS[graph_num].map(type => {
-          // Disable PreviousResult option initially until there's a result
-          const disabled = (type === 'PreviousResult' && previousResult === null) ? ' disabled' : '';
-          let label = GRAPH_LABELS[type];
-
-          // Add the formatted result to the PreviousResult label when available
-          if (type === 'PreviousResult' && previousResult) {
-            label += ': ' + formatResult(previousResult);
-          }
-
-          return `<option value="${type}"${disabled}>${label}</option>`;
+          const label = GRAPH_LABELS[type];
+          return `<option value="${type}">${label}</option>`;
         }).join('');
 
         return `
@@ -1333,10 +1313,6 @@
               </div>
               <div id="dynamic-q-inputs-${graph_num}" class="hidden">
                 <!-- Dynamic q1 through qm inputs will be created here -->
-              </div>
-              <div id="previous-result-display-${graph_num}" class="hidden" style="margin-top: 10px; padding: 8px; background-color: #e8f4fd; border: 1px solid #bee5eb; border-radius: 4px;">
-                <strong>Using Previous Result:</strong>
-                <div id="previous-result-text-${graph_num}" style="font-family: 'Inter'; margin-top: 5px;"></div>
               </div>
             </div>
           </div>
@@ -1386,7 +1362,6 @@
 
         const dynamicP = document.getElementById(`dynamic-p-inputs-${graph_num}`);
         const dynamicQ = document.getElementById(`dynamic-q-inputs-${graph_num}`);
-        const previousResultDisplay = document.getElementById(`previous-result-display-${graph_num}`);
 
         if (dynamicP) {
           dynamicP.classList.add('hidden');
@@ -1396,10 +1371,6 @@
         if (dynamicQ) {
           dynamicQ.classList.add('hidden');
           dynamicQ.innerHTML = "";
-        }
-
-        if (previousResultDisplay) {
-          previousResultDisplay.classList.add('hidden');
         }
       }
 
@@ -1423,11 +1394,6 @@
         const config = GRAPH_CONFIG[graphType];
         if (!config) throwError("config is undefined");
         if (!isValidInteger(graph_num)) throwError("graph_num returned an invalid number: " + graph_num);
-
-        // PreviousResult requires an existing previousResult
-        if (graphType === 'PreviousResult') {
-          return previousResult !== null;
-        }
 
         // Check static inputs declared for the graph type
         if (config.inputs && config.inputs.length > 0) {
@@ -1469,22 +1435,11 @@
         // Hide all inputs first
         hideAllInputs(graph_num);
 
-        // Special handling for Previous Result
-        if (selection === 'PreviousResult') {
-          const previousResultDisplay = document.getElementById(`previous-result-display-${graph_num}`);
-          const previousResultText = document.getElementById(`previous-result-text-${graph_num}`);
-
-          if (previousResultDisplay && previousResult) {
-            previousResultDisplay.classList.remove('hidden');
-            setDisplayContent(previousResultText, formatResult(previousResult));
-          }
-        } else {
-          // Show required inputs based on configuration
-          if (config && config.inputs) {
-            config.inputs.forEach(inputType => {
-              showInputElement(inputType, graph_num);
-            });
-          }
+        // Show required inputs based on configuration
+        if (config && config.inputs) {
+          config.inputs.forEach(inputType => {
+            showInputElement(inputType, graph_num);
+          });
         }
 
         // Update degree sequence display
@@ -1766,32 +1721,12 @@
         }
 
         const result = compose(g, h);
-        previousResult = result;
 
         // Display result in the result div
         const resultDivShort = document.getElementById('composition-result-short');
         setDisplayContent(resultDivShort, formatResult(result));
         // const resultDivLong = document.getElementById('composition-result-long');
         // setDisplayContent(resultDivLong, longFormatResult(result));
-
-        // Enable the PreviousResult option in dropdown 1 and update its label
-        const dropdown1 = document.getElementById('graph-type-1');
-        const previousResultOption = dropdown1.querySelector('option[value="PreviousResult"]');
-        if (previousResultOption) {
-          previousResultOption.disabled = false;
-          previousResultOption.textContent = 'Previous Result: ' + formatResult(previousResult);
-        }
-
-        // Update any visible previous result displays
-        for (let i = 1; i <= 2; i++) {
-          const dropdown = document.getElementById(`graph-type-${i}`);
-          if (!dropdown) throwError("dropdown is undefined");
-          if (dropdown && dropdown.value === 'PreviousResult') {
-            const previousResultText = document.getElementById(`previous-result-text-${i}`);
-            if (!previousResultText) throwError("previousResultText is undefined");
-            setDisplayContent(previousResultText, formatResult(previousResult));
-          }
-        }
       }
 
       function getDegreeSequence(type, params, graph_num) {
