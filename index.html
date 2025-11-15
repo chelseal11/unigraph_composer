@@ -1274,7 +1274,7 @@
         };
 
         let onchange = inputType === 'm' ? ` onchange="handleMChange(${graph_num})"` : "";
-        onchange += ` oninput="updateDegreeSequenceDisplay(${graph_num})"`
+        // onchange += ` oninput="updateDegreeSequenceDisplay(${graph_num})"`
 
         return `
           <div id="input-${inputType}-${graph_num}" class="hidden">
@@ -1519,7 +1519,7 @@
         }
 
         // Update degree sequence display
-        updateDegreeSequenceDisplay(graph_num);
+        // updateDegreeSequenceDisplay(graph_num);
       }
 
       // function updateDegreeSequenceDisplay(graph_num) {
@@ -1726,7 +1726,7 @@
             const inputDiv = document.createElement('div');
             inputDiv.innerHTML = `
               <label for="s2-p${i}-${graph_num}">Enter p${i}:</label>
-              <input type="number" id="s2-p${i}-${graph_num}" name="p${i}" min="1" oninput="updateDegreeSequenceDisplay(${graph_num})">
+              <input type="number" id="s2-p${i}-${graph_num}" name="p${i}" min="1">
             `;
             DYNAMIC_P.appendChild(inputDiv);
           }
@@ -1736,7 +1736,7 @@
             const inputDiv = document.createElement('div');
             inputDiv.innerHTML = `
               <label for="s2-q${i}-${graph_num}">Enter q${i}:</label>
-              <input type="number" id="s2-q${i}-${graph_num}" name="q${i}" min="1" oninput="updateDegreeSequenceDisplay(${graph_num})">
+              <input type="number" id="s2-q${i}-${graph_num}" name="q${i}" min="1">
             `;
             DYNAMIC_Q.appendChild(inputDiv);
           }
@@ -2255,12 +2255,19 @@
             break;
           }
         }
+
         if (graphs.length !== numGraphs) {
           throwError("Unable to generate random unigraphs for any partitioning; please try again.");
           return;
         }
 
-        const finalResult = composeGraphs(graphs);
+        let finalResult;
+        if (graphs.length < 2) {
+          finalResult = graphs[0];
+        } else {
+          finalResult = composeGraphs(graphs);
+        }
+
         if (!finalResult) throwError("finalResult is undefined");
         const compositionResultDiv = document.getElementById('final-result-short');
         compositionResultDiv.innerHTML = `final result: ${formatResult(finalResult)}`;
