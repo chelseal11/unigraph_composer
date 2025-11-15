@@ -777,8 +777,17 @@
             <input type="text" id="compose-graphs-input-1" placeholder="Enter a graph to compose... Example: 5^2, 4^3, 1^1">
           </div>
 
+          <div id="compose-graphs-inputs-container">
+            <div class="compose-graph-input-wrapper" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="compose-graphs-input-2" placeholder="Enter a split graph to compose... Example: 2^1 ; 1^1" style="flex: 1;">
+            </div>
+          </div>
+
           <div style="margin-bottom: 24px;">
-            <input type="text" id="compose-graphs-input-2" placeholder="Enter a split graph to compose... Example: 2^1 ; 1^1">
+            <button style="width: 50px; height: 50px; font-size: 2em; line-height: 1; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 20px auto; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 0;"
+            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
+            onclick="addComposeGraphInput()">+</button>
           </div>
 
           <button onclick="graphComposition()">Compose Graphs</button>
@@ -791,21 +800,23 @@
         <div class="help-section">
           <h3>About This Tool</h3>
           <p>
-            Compose two graphs directly by their degree sequences.
+            Compose multiple graphs directly by their degree sequences.
           </p>
           <p><strong>How to use:</strong></p>
           <ul>
             <li>Enter the first graph's degree sequence (format: degree^count)</li>
             <li>Enter the second graph's degree sequence (must be a split graph)</li>
+            <li>Click "+ Add Graph" to add more graphs to compose (optional)</li>
             <li>For split graphs, use semicolon to separate partitions: "A ; B"</li>
             <li>Example: "2^1 ; 1^1" means partition A has 1 vertex of degree 2, partition B has 1 vertex of degree 1</li>
             <li>Click "Compose Graphs" to compute the composition</li>
           </ul>
           <p>
             This tool is useful for applying the same composition operation to graphs regardless of if they're unigraphs.
+            Graphs are composed sequentially from left to right: G₁ ∘ G₂ ∘ G₃ ∘ ...
           </p>
           <p>
-            <strong>Note:</strong> The second graph must be a valid split graph for the composition to work.
+            <strong>Note:</strong> All graphs after the first must be valid split graphs for the composition to work.
           </p>
         </div>
       </div>
@@ -1354,12 +1365,47 @@
         graphCount++;
         const dropdownContainer = document.querySelector('.dropdown-container');
 
+        // Create a wrapper for the graph section and remove button
+        const graphWrapper = document.createElement('div');
+        graphWrapper.style.position = 'relative';
+        graphWrapper.style.marginBottom = '20px';
+
         // Create a temporary div to hold the new graph HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = generateGraphContainerHTML(graphCount);
 
-        // Append the new graph to the container
-        dropdownContainer.appendChild(tempDiv.firstElementChild);
+        // Create remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'x';
+        removeBtn.style.width = '25px';
+        removeBtn.style.height = '25px';
+        removeBtn.style.minWidth = '25px';
+        removeBtn.style.minHeight = '25px';
+        removeBtn.style.padding = '0';
+        removeBtn.style.fontSize = '1em';
+        removeBtn.style.lineHeight = '1';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.background = 'white';
+        removeBtn.style.color = 'black';
+        removeBtn.style.border = 'none';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '10px';
+        removeBtn.style.right = '10px';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.onclick = function() {
+          graphWrapper.remove();
+          graphCount--;
+        };
+
+        // Append the graph section and remove button to wrapper
+        graphWrapper.appendChild(tempDiv.firstElementChild);
+        graphWrapper.appendChild(removeBtn);
+
+        // Append the wrapper to the container
+        dropdownContainer.appendChild(graphWrapper);
 
         // Initialize the inputs for the new graph
         showInputs(graphCount);
@@ -2551,6 +2597,22 @@
 
       function convertToDegSequence(input) {
         if (!input) throwError("input is undefined");
+        if (input.includes(';')) {
+          const [left, right] = input.split(';');
+          const leftDegreeSequence = convertToDegSequence(left);
+          const rightDegreeSequence = convertToDegSequence(right);
+          let result = {};
+          let index = 1;
+          Object.keys(leftDegreeSequence).forEach((key) => {
+            result[index] = leftDegreeSequence[key];
+            index++;
+          });
+          Object.keys(rightDegreeSequence).forEach((key) => {
+            result[index] = rightDegreeSequence[key];
+            index++;
+          });
+          return result;
+        }
         const result = {};
         const strippedInput = input.replaceAll(' ', '');
         const inputArray = strippedInput.split(',');
@@ -2625,27 +2687,97 @@
         }
       }
 
+      // Track the number of graph inputs for composition
+      let composeGraphInputCount = 2;
+
+      function addComposeGraphInput() {
+        composeGraphInputCount++;
+        const container = document.getElementById('compose-graphs-inputs-container');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'compose-graph-input-wrapper';
+        wrapper.style.marginBottom = '20px';
+        wrapper.style.display = 'flex';
+        wrapper.style.gap = '10px';
+        wrapper.style.alignItems = 'center';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `compose-graphs-input-${composeGraphInputCount}`;
+        input.placeholder = 'Enter a split graph to compose... Example: 2^1 ; 1^1';
+        input.style.flex = '1';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'x';
+        removeBtn.style.width = '25px';
+        removeBtn.style.height = '25px';
+        removeBtn.style.minWidth = '25px';
+        removeBtn.style.minHeight = '25px';
+        removeBtn.style.padding = '0';
+        removeBtn.style.fontSize = '1em';
+        removeBtn.style.lineHeight = '1';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.background = 'white';
+        removeBtn.style.color = 'black';
+        removeBtn.style.border = 'none';
+        removeBtn.style.display = 'flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.onclick = function() {
+          wrapper.remove();
+        };
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(removeBtn);
+        container.appendChild(wrapper);
+      }
+
       function graphComposition() {
         document.getElementById('compose-graphs-result').innerHTML = "";
+
+        // Collect all input values
+        const inputs = [];
         const input1 = document.getElementById('compose-graphs-input-1').value;
-        const input2 = document.getElementById('compose-graphs-input-2').value;
-        const input1Valid = isValidDegreeSequence(input1);
-        const input2Valid = isValidDegreeSequence(input2);
-        if (!input1Valid || !input2Valid) {
-          if (!input1Valid) {
-            throwError(`${input1} is an invalid degree sequence`);
+        inputs.push(input1);
+
+        // Get all dynamically created inputs
+        const container = document.getElementById('compose-graphs-inputs-container');
+        const inputWrappers = container.querySelectorAll('.compose-graph-input-wrapper');
+        inputWrappers.forEach((wrapper) => {
+          const input = wrapper.querySelector('input');
+          if (input && input.value.trim()) {
+            inputs.push(input.value);
           }
-          if (!input2Valid) {
-            throwError(`${input2} is an invalid degree sequence`);
+        });
+
+        // Validate all inputs
+        for (let i = 0; i < inputs.length; i++) {
+          if (!isValidDegreeSequence(inputs[i])) {
+            throwError(`Graph ${i + 1} has an invalid degree sequence: ${inputs[i]}`);
+            return;
           }
-          return;
         }
-        const degSequence1 = convertStringToHashmap(input1);
-        const degSequence2 = convertStringToHashmap(input2);
-        if (!degSequence1) throwError("degSequence1 is undefined");
-        if (!degSequence2) throwError("degSequence2 is undefined");
-        const result = compose(degSequence1, degSequence2);
-        if (!result) throwError("result is undefined");
+
+        // Convert all inputs to hashmaps
+        const degSequences = inputs.map(input => convertStringToHashmap(input));
+
+        // Validate all degree sequences were converted
+        for (let i = 0; i < degSequences.length; i++) {
+          if (!degSequences[i]) {
+            throwError(`degSequence${i + 1} is undefined`);
+            return;
+          }
+        }
+
+        // Compose all graphs sequentially (g1 ∘ g2 ∘ g3 ∘ ...)
+        let result = degSequences[0];
+        for (let i = 1; i < degSequences.length; i++) {
+          result = compose(result, degSequences[i]);
+          if (!result) {
+            throwError(`Composition failed at graph ${i + 1}`);
+            return;
+          }
+        }
+
         document.getElementById('compose-graphs-result').innerHTML = formatResult(result);
       }
 
@@ -3031,10 +3163,6 @@
       function isValidDegreeSequence(input) {
         if (!input) throwError("input is undefined");
         const strippedInput = input.replaceAll(' ', '');
-        if (strippedInput.includes(';')) {
-          const [left, right] = strippedInput.split(';');
-          return isValidDegreeSequence(left) && isValidDegreeSequence(right);
-        }
         const degreeSequence = convertToDegSequence(strippedInput);
         const degreeSequenceKeys = Object.keys(degreeSequence);
         const degreeSequenceValues = Object.values(degreeSequence);
