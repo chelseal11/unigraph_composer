@@ -87,6 +87,7 @@
       #random-unigraph-generator,
       #decompose-graph,
       #decompose-graph-v2,
+      #clique-numbers,
       #compose-graphs {
         padding: 40px;
         background: rgba(255, 255, 255, 0.95);
@@ -500,6 +501,7 @@
       <button onclick="showRandomUnigraphGenerator()">Random Unigraph Generator</button>
       <button onclick="showDecompose()">Graph Decomposition and Unigraph Detection Tool</button>
       <button onclick="showDecomposeV2()">Distinguishing Number and Fixing Number</button>
+      <button onclick="showCliqueNumbers()">Clique size, Independence number, vertex cover number and chromatic number</button>
       <button onclick="showComposeGraphs()">Compose Graphs</button>
     </div>
 
@@ -551,7 +553,17 @@
       </div>
 
       <div style="margin-bottom: 20px;">
-        <h4>5. Compose Graphs</h4>
+        <h4>5. Clique size, Independence number, vertex cover number and chromatic number</h4>
+        <p>
+          Decompose a graph (provided as a degree sequence) into its basic components and compute
+          fundamental graph properties: clique size, independence number, vertex cover number, and
+          chromatic number. The tool determines if the graph is a unigraph and calculates these key
+          structural characteristics.
+        </p>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4>6. Compose Graphs</h4>
         <p>
           Compose two graphs by their degree sequences. The second graph must be a split graph.
           Enter degree sequences in the format: degree^count (e.g., "5^2, 4^3, 1^1" represents
@@ -768,6 +780,51 @@
       </div>
     </div>
 
+    <div id="clique-numbers" class="hidden">
+      <div class="content-wrapper">
+        <div class="main-content">
+          <h2>Clique size, Independence number, vertex cover number and chromatic number</h2>
+          <p>Decompose a graph into its basic components:</p>
+
+          <div style="margin-bottom: 24px; margin-top: 20px;">
+            <input type="text" id="clique-numbers-input" placeholder="Enter a graph to decompose... Example: 5^2, 4^3, 1^1">
+          </div>
+
+          <button onclick="analyzeCliqueNumbers()">Decompose Graph</button>
+
+          <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <div id="clique-numbers-result-unigraph" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+            <div id="clique-numbers-result-full" data-placeholder="Click 'Decompose Graph' to see the result here..."></div>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>About This Tool</h3>
+          <p>
+            Decompose graphs and compute clique size, independence number, vertex cover number, and chromatic number.
+          </p>
+          <p><strong>How to use:</strong></p>
+          <ul>
+            <li>Enter a degree sequence: "5^2, 4^3, 1^1"</li>
+            <li>Click "Decompose Graph" to analyze</li>
+          </ul>
+          <p>
+            The tool provides:
+          </p>
+          <ul>
+            <li><strong>Unigraph detection:</strong> Determines if the graph is a unigraph</li>
+            <li><strong>Clique size:</strong> The size of the maximum clique in the graph</li>
+            <li><strong>Independence number:</strong> The size of the maximum independent set</li>
+            <li><strong>Vertex cover number:</strong> The minimum number of vertices needed to cover all edges</li>
+            <li><strong>Chromatic number:</strong> The minimum number of colors needed for proper vertex coloring</li>
+          </ul>
+          <p>
+            This analysis is useful for understanding fundamental graph properties and verifying structural characteristics.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div id="compose-graphs" class="hidden">
       <div class="content-wrapper">
         <div class="main-content">
@@ -833,7 +890,9 @@
           potentialVertices: [5],
           potentialParamsByNumVertices: (numVertices) => ([{}]),
           distinguishingNumber: () => 3,
-          fixingNumber: () => 2
+          fixingNumber: () => 2,
+          cliqueNumber: () => 2,
+          independenceNumber: () => 2
         },
         'mK2': {
           inputs: ['m'],
@@ -848,6 +907,11 @@
             return (Math.ceil((1 + Math.sqrt(1 + 8*m)) / 2))
           },
           fixingNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            return m;
+          },
+          cliqueNumber: () => 2,
+          independenceNumber: (m) => {
             if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             return m;
           }
@@ -884,6 +948,12 @@
             if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             if (!isValidInteger(l)) throwError("Invalid parameter l: " + l);
             return m + l - 1;
+          },
+          cliqueNumber: () => 2,
+          independenceNumber: (m, l) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            if (!isValidInteger(l)) throwError("Invalid parameter l: " + l);
+            return m + l;
           }
         },
         'U3': {
@@ -904,6 +974,11 @@
           fixingNumber: (m) => {
             if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
             return m + 1;
+          },
+          cliqueNumber: () => 3,
+          independenceNumber: (m) => {
+            if (!isValidInteger(m)) throwError("Invalid parameter m: " + m);
+            return m + 2;
           }
         },
         'SVG': {
@@ -943,6 +1018,12 @@
             const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
             const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
             return aTotalVertices + bTotalVertices - 1;
+          },
+          cliqueNumber: (degreeSequence) => {
+            return cliqueNumberSplitGraph(degreeSequence);
+          },
+          independenceNumber: (degreeSequence) => {
+            return independenceNumberSplitGraph(degreeSequence);
           }
         },
         'Spq': {
@@ -988,6 +1069,12 @@
             if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             const result = p == 1 ? q - 1 : q * (p - 1);
             return result;
+          },
+          cliqueNumber: (degreeSequence) => {
+            return cliqueNumberSplitGraph(degreeSequence);
+          },
+          independenceNumber: (degreeSequence) => {
+            return independenceNumberSplitGraph(degreeSequence);
           }
         },
         'S2': {
@@ -1055,6 +1142,12 @@
               sum += GRAPH_CONFIG['Spq'].fixingNumber(p, q);
             }
             return sum;
+          },
+          cliqueNumber: (degreeSequence) => {
+            return cliqueNumberSplitGraph(degreeSequence);
+          },
+          independenceNumber: (degreeSequence) => {
+            return independenceNumberSplitGraph(degreeSequence);
           }
         },
         'S3': {
@@ -1102,6 +1195,12 @@
             if (!isValidInteger(q1)) throwError("Invalid parameter q1: " + q1);
             if (!isValidInteger(q2)) throwError("Invalid parameter q2: " + q2);
             return GRAPH_CONFIG['Spq'].fixingNumber(p, q1) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q2);
+          },
+          cliqueNumber: (degreeSequence) => {
+            return cliqueNumberSplitGraph(degreeSequence);
+          },
+          independenceNumber: (degreeSequence) => {
+            return independenceNumberSplitGraph(degreeSequence);
           }
         },
         'S4': {
@@ -1143,6 +1242,12 @@
             if (!isValidInteger(p)) throwError("Invalid parameter p: " + p);
             if (!isValidInteger(q)) throwError("Invalid parameter q: " + q);
             return GRAPH_CONFIG['Spq'].fixingNumber(p, 2) + GRAPH_CONFIG['Spq'].fixingNumber(p + 1, q);
+          },
+          cliqueNumber: (degreeSequence) => {
+            return cliqueNumberSplitGraph(degreeSequence);
+          },
+          independenceNumber: (degreeSequence) => {
+            return independenceNumberSplitGraph(degreeSequence);
           }
         }
       };
@@ -1592,6 +1697,28 @@
         const hasParams = paramsString != undefined;
         const typeString = typeText(uniType, uniLabel, isCompacted);
         return [`${typeString}${paramsString}${degreeSequenceText}`, isGraphUnigraph];
+      }
+
+      function generateTextCliqueNumbers(degreeSequence) {
+        const [isGraphUnigraph, uniLabel, uniType, uniParams, newDegreeSequence] = isComponent(degreeSequence);
+        const degSequenceToDisplay = newDegreeSequence || degreeSequence;
+        if (!degSequenceToDisplay) throwError("degSequenceToDisplay is undefined");
+        const degreeSequenceText = "Degree Sequence: " + formatResult(degSequenceToDisplay) + "<br>";
+        const hasCompactedParam = uniParams.compacted !== undefined;
+        const isCompacted = hasCompactedParam && uniParams.compacted;
+        const paramsString = paramsText(uniParams);
+        const hasParams = paramsString != undefined;
+        const typeString = typeText(uniType, uniLabel, isCompacted);
+        const cliqueNumberResult = cliqueNumber(uniLabel, uniParams, degSequenceToDisplay);
+        const cliqueNumberString = "Clique Number: " + cliqueNumberResult + "<br>";
+        const independenceNumberResult = independenceNumber(uniLabel, uniParams, degSequenceToDisplay);
+        const independenceNumberString = "Independence Number: " + independenceNumberResult + "<br>";
+        const numVertices = countVertices(degSequenceToDisplay);
+        const vertexCoverNumberString = "Vertex Cover Number: " + (numVertices - independenceNumberResult) + "<br>";
+        const isC5 =  Object.values(degreeSequence)[0] === 5 && Number(Object.keys(degreeSequence)[0]) === 2;
+        const chromaticNumberString = "Chromatic Number: " + (isC5 ? cliqueNumberResult + 1 : cliqueNumberResult);
+        const text = isGraphUnigraph ? `${typeString}${paramsString}${degreeSequenceText}${cliqueNumberString}${independenceNumberString}${vertexCoverNumberString}${chromaticNumberString}` : `${degreeSequenceText}`;
+        return [text, isGraphUnigraph, cliqueNumberResult, independenceNumberResult];
       }
 
       function fixingNumber(uniLabel, uniType, uniParams, degreeSequence) {
@@ -2126,6 +2253,7 @@
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
         document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('about').classList.remove('hidden');
         setActiveTab('About');
@@ -2136,6 +2264,7 @@
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
         document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('compose-unigraphs').classList.remove('hidden');
         setActiveTab('Compose Unigraphs');
@@ -2146,6 +2275,7 @@
         document.getElementById('compose-unigraphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
         document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('random-unigraph-generator').classList.remove('hidden');
         setActiveTab('Random Unigraph Generator');
@@ -2158,6 +2288,7 @@
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.remove('hidden');
         document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         setActiveTab('Graph Decomposition');
       }
 
@@ -2168,7 +2299,19 @@
         document.getElementById('compose-graphs').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
         document.getElementById('decompose-graph-v2').classList.remove('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         setActiveTab('Distinguishing Number');
+      }
+
+      function showCliqueNumbers() {
+        document.getElementById('about').classList.add('hidden');
+        document.getElementById('compose-unigraphs').classList.add('hidden');
+        document.getElementById('random-unigraph-generator').classList.add('hidden');
+        document.getElementById('compose-graphs').classList.add('hidden');
+        document.getElementById('decompose-graph').classList.add('hidden');
+        document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.remove('hidden');
+        setActiveTab('Clique Numbers');
       }
 
       function decomposeGraphV2() {
@@ -2200,6 +2343,7 @@
         document.getElementById('random-unigraph-generator').classList.add('hidden');
         document.getElementById('decompose-graph').classList.add('hidden');
         document.getElementById('decompose-graph-v2').classList.add('hidden');
+        document.getElementById('clique-numbers').classList.add('hidden');
         document.getElementById('compose-graphs').classList.remove('hidden');
         setActiveTab('Compose Graphs');
       }
@@ -2416,6 +2560,26 @@
         return [result, isUnigraph];
       }
 
+      function formatComponentsCliqueNumbers(components) {
+        let result = "";
+        let isUnigraph = true;
+        let cliqueNumber = 0;
+        let independenceNumber = 0;
+        let index = 1;
+        components.forEach(component => {
+          const [text, isGraphUnigraph, cliqueNumberResult, independenceNumberResult] = generateTextCliqueNumbers(component);
+          isUnigraph = isUnigraph && isGraphUnigraph;
+          cliqueNumber += cliqueNumberResult;
+          independenceNumber += independenceNumberResult;
+          result += `Component ${index}:<br>${text}`;
+          if (index < components.length) {
+            result += "<br><br>";
+          }
+          index++;
+        });
+        return [result, isUnigraph, cliqueNumber, independenceNumber];
+      }
+
       function convertToHashmap(component) {
         if (component == "") {
           return {};
@@ -2463,6 +2627,44 @@
         const [reversedHashComponentsTextBasic] = formatComponentsBasic(reversedHashComponents);
         document.getElementById('decompose-graph-result-unigraph').innerHTML = "Is unigraph: " + minimalComponentsIsUnigraph;
         document.getElementById('decompose-graph-result-full').innerHTML = "Components: <br><br>" + reversedHashComponentsTextBasic;
+      }
+
+      function countVertices(degreeSequence) {
+        if (degreeSequence.A !== undefined && degreeSequence.B !== undefined) {
+          return Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0) + Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
+        }
+        return Object.values(degreeSequence).reduce((acc, curr) => acc + curr, 0);
+      }
+
+      function analyzeCliqueNumbers() {
+        document.getElementById('clique-numbers-result-unigraph').innerHTML = "";
+        document.getElementById('clique-numbers-result-full').innerHTML = "";
+        const input = document.getElementById('clique-numbers-input').value;
+        if (!isValidDegreeSequence(input)) {
+          throwError(`${input} is an invalid degree sequence`);
+          return;
+        }
+        const components = decompose(input);
+        if (!components) throwError("components is undefined");
+        const hashComponents = components.map(component => convertGraphToHashmap(component));
+        const reversedHashComponents = hashComponents.reverse();
+        const minimalComponents = minimalDecompose(reversedHashComponents);
+        if (!minimalComponents) throwError("minimalComponents is undefined");
+        const [minimalComponentsTextBasic, minimalComponentsIsUnigraph, minimalComponentsCliqueNumber, minimalComponentsIndependenceNumber] = formatComponentsCliqueNumbers(minimalComponents);
+        const [reversedHashComponentsTextBasic, reversedHashComponentsIsUnigraph, reversedHashComponentsCliqueNumber, reversedHashComponentsIndependenceNumber] = formatComponentsCliqueNumbers(reversedHashComponents);
+        const cliqueNumberText = "Clique Number: " + reversedHashComponentsCliqueNumber;
+        const independenceNumberText = "Independence Number: " + reversedHashComponentsIndependenceNumber;
+        const degreeSequence = convertStringToHashmap(input);
+        console.log("degreeSequence: ", degreeSequence);
+        const numVertices = countVertices(degreeSequence);
+        console.log("numVertices: ", numVertices);
+        const vertexCoverNumberText = "Vertex Cover Number: " + (numVertices - reversedHashComponentsIndependenceNumber);
+        const gSubZero = reversedHashComponents[0];
+        const gSubZeroisC5 = Object.values(gSubZero)[0] === 5 && Number(Object.keys(gSubZero)[0]) === 2;
+        const chromaticNumber = gSubZeroisC5 ? reversedHashComponentsCliqueNumber + 1 : reversedHashComponentsCliqueNumber;
+        const chromaticNumberText = "Chromatic Number: " + chromaticNumber;
+        document.getElementById('clique-numbers-result-unigraph').innerHTML = !reversedHashComponentsIsUnigraph ? "Is Unigraph: false" : "Is unigraph: true" +  "<br>" + cliqueNumberText + "<br>" + independenceNumberText + "<br>" + vertexCoverNumberText + "<br>" + chromaticNumberText;
+        document.getElementById('clique-numbers-result-full').innerHTML = "Components: <br><br>" + reversedHashComponentsTextBasic + "<br>";
       }
 
       function minimalDecompose(hashComponents) {
@@ -3197,6 +3399,72 @@
           inputArray.sort((a, b) => b - a);
         }
         return true;
+      }
+
+      function cliqueNumberSplitGraph(degreeSequence) {
+        if (!degreeSequence) throwError("degreeSequence is undefined");
+        if (degreeSequence.A === undefined) throwError("degreeSequence.A is undefined");
+        const aTotalVertices = Object.values(degreeSequence.A).reduce((acc, curr) => acc + curr, 0);
+        return aTotalVertices;
+      }
+
+      function independenceNumberSplitGraph(degreeSequence) {
+        if (!degreeSequence) throwError("degreeSequence is undefined");
+        if (degreeSequence.B === undefined) throwError("degreeSequence.B is undefined");
+        const bTotalVertices = Object.values(degreeSequence.B).reduce((acc, curr) => acc + curr, 0);
+        return bTotalVertices;
+      }
+
+      function cliqueNumber(uniLabel, uniParams, degreeSequence) {
+        if (!degreeSequence) throwError("degreeSequence is undefined");
+        switch (uniLabel) {
+          case 'C5':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber();
+          case 'mK2':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(uniParams.m);
+          case 'U2':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(uniParams.m, uniParams.l);
+          case 'U3':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(uniParams.m);
+          case 'Spq':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(degreeSequence);
+          case 'S2':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(degreeSequence);
+          case 'S3':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(degreeSequence);
+          case 'S4':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(degreeSequence);
+          case 'SVG':
+            return GRAPH_CONFIG[uniLabel].cliqueNumber(degreeSequence);
+          default:
+            return undefined;
+        }
+      }
+
+      function independenceNumber(uniLabel, uniParams, degreeSequence) {
+        if (!degreeSequence) throwError("degreeSequence is undefined");
+        switch (uniLabel) {
+          case 'C5':
+            return GRAPH_CONFIG[uniLabel].independenceNumber();
+          case 'mK2':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(uniParams.m);
+          case 'U2':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(uniParams.m, uniParams.l);
+          case 'U3':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(uniParams.m);
+          case 'Spq':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(degreeSequence);
+          case 'S2':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(degreeSequence);
+          case 'S3':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(degreeSequence);
+          case 'S4':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(degreeSequence);
+          case 'SVG':
+            return GRAPH_CONFIG[uniLabel].independenceNumber(degreeSequence);
+          default:
+            return undefined;
+        }
       }
 
       function throwError(message) {
